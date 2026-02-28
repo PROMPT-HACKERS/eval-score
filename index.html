@@ -463,8 +463,9 @@
 
     @media (max-width: 600px) {
       header {
-        flex-direction: row;
-        gap: 8px;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 6px;
         padding: 10px 12px;
       }
 
@@ -474,6 +475,8 @@
 
       .header-right {
         gap: 6px;
+        flex-wrap: wrap;
+        width: 100%;
       }
 
       .btn-dashboard {
