@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>プロンプトデータ作成ツール</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Hiragino Sans', sans-serif;
+      background: #f5f7fa;
+      color: #1f2937;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Header */
+    header {
+      background: #1a1a2e;
+      color: white;
+      padding: 10px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-shrink: 0;
+    }
+    header h1 { font-size: 15px; font-weight: 600; }
+    .header-right { display: flex; align-items: center; gap: 10px; font-size: 13px; }
+    .count-badge {
+      background: rgba(255,255,255,0.15);
+      padding: 3px 10px;
+      border-radius: 99px;
+      font-size: 12px;
+    }
+
+    /* Main layout */
+    .layout {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      flex: 1;
+      overflow: hidden;
+    }
+
+    /* Left panel */
+    .left {
+      display: flex;
+      flex-direction: column;
+      border-right: 1px solid #e0e4ea;
+      overflow: hidden;
+    }
+
+    .left-top {
+      padding: 16px;
+      border-bottom: 1px solid #e0e4ea;
+      background: white;
+      flex-shrink: 0;
+    }
+
+    .label {
+      font-size: 11px;
+      font-weight: 700;
+      color: #6b7280;
+      text-transform: uppercase;
+      letter-spacing: 0.7px;
+      margin-bottom: 6px;
+    }
+
+    textarea#prompt-input {
+      width: 100%;
+      height: 180px;
+      border: 1px solid #d1d5db;
+      border-radius: 6px;
+      padding: 10px 12px;
+      font-size: 13px;
+      line-height: 1.7;
+      resize: none;
+      font-family: inherit;
+      color: #1f2937;
+    }
+    textarea#prompt-input:focus {
+      outline: none;
+      border-color: #6366f1;
+      box-shadow: 0 0 0 2px rgba(99,102,241,0.15);
+    }
+
+    .btn-row {
+      display: flex;
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    .btn {
+      padding: 7px 16px;
+      border-radius: 5px;
+      border: 1px solid #d1d5db;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 500;
+      background: white;
+      color: #374151;
+    }
+    .btn:hover { background: #f3f4f6; }
+    .btn-primary { background: #1a1a2e; color: white; border-color: #1a1a2e; }
+    .btn-primary:hover { background: #16213e; }
+    .btn-export { background: #16a34a; color: white; border-color: #16a34a; }
+    .btn-export:hover { background: #15803d; }
+    .btn-sm { padding: 4px 10px; font-size: 12px; }
+    .btn-danger-sm {
+      padding: 3px 8px;
+      font-size: 11px;
+      border: 1px solid #fca5a5;
+      border-radius: 4px;
+      background: white;
+      color: #dc2626;
+      cursor: pointer;
+    }
+    .btn-danger-sm:hover { background: #fee2e2; }
+    .btn-edit-sm {
+      padding: 3px 8px;
+      font-size: 11px;
+      border: 1px solid #d1d5db;
+      border-radius: 4px;
+      background: white;
+      color: #374151;
+      cursor: pointer;
+    }
+    .btn-edit-sm:hover { background: #f3f4f6; }
+
+    /* List */
+    .left-list {
+      flex: 1;
+      overflow-y: auto;
+      padding: 12px 16px;
+    }
+
+    .empty-hint {
+      color: #9ca3af;
+      font-size: 13px;
+      text-align: center;
+      padding: 32px 0;
+      line-height: 1.8;
+    }
+
+    .prompt-item {
+      background: white;
+      border: 1px solid #e5e7eb;
+      border-radius: 6px;
+      padding: 10px 12px;
+      margin-bottom: 8px;
+      display: flex;
+      gap: 10px;
+      align-items: flex-start;
+    }
+    .prompt-item.editing { border-color: #6366f1; box-shadow: 0 0 0 2px rgba(99,102,241,0.15); }
+
+    .item-id {
+      font-size: 11px;
+      font-weight: 700;
+      color: #9ca3af;
+      min-width: 28px;
+      padding-top: 1px;
+    }
+    .item-text {
+      flex: 1;
+      font-size: 12px;
+      line-height: 1.6;
+      color: #374151;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+    .item-actions {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      flex-shrink: 0;
+    }
+
+    .left-footer {
+      padding: 12px 16px;
+      border-top: 1px solid #e0e4ea;
+      background: white;
+      flex-shrink: 0;
+    }
+
+    /* Right panel: 評価基準 */
+    .right {
+      overflow-y: auto;
+      padding: 16px;
+      background: #fafbfc;
+    }
+
+    .criteria-title {
+      font-size: 13px;
+      font-weight: 700;
+      color: #111827;
+      margin-bottom: 14px;
+      padding-bottom: 8px;
+      border-bottom: 2px solid #e5e7eb;
+    }
+
+    .crit-card {
+      background: white;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      padding: 12px 14px;
+      margin-bottom: 10px;
+    }
+
+    .crit-name {
+      font-size: 13px;
+      font-weight: 700;
+      color: #1a1a2e;
+      margin-bottom: 3px;
+    }
+
+    .crit-desc {
+      font-size: 12px;
+      color: #6b7280;
+      margin-bottom: 8px;
+      line-height: 1.5;
+    }
+
+    .crit-options {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+
+    .crit-option {
+      display: flex;
+      align-items: baseline;
+      gap: 6px;
+      font-size: 11px;
+      color: #6b7280;
+    }
+    .crit-option-val {
+      font-weight: 700;
+      color: #374151;
+      min-width: 28px;
+      flex-shrink: 0;
+    }
+    .crit-option-note {
+      color: #9ca3af;
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>プロンプトデータ作成ツール</h1>
+  <div class="header-right">
+    <span class="count-badge" id="count-badge">0 件</span>
+  </div>
+</header>
+
+<div class="layout">
+
+  <!-- ── 左：入力エリア ── -->
+  <div class="left">
+    <div class="left-top">
+      <div class="label">プロンプト入力</div>
+      <textarea id="prompt-input"
+        placeholder="あなたは○○の専門家です。&#10;【対象者】...&#10;【スコープ】...&#10;【出力形式】..."></textarea>
+      <div class="btn-row">
+        <button class="btn btn-primary" onclick="addPrompt()">＋ 追加</button>
+        <button class="btn" onclick="clearInput()">クリア</button>
+      </div>
+    </div>
+
+    <div class="left-list" id="prompt-list">
+      <div class="empty-hint">
+        プロンプトを入力して「追加」を押してください<br>
+        右側の評価基準を参考に品質の高いプロンプトを作成しましょう
+      </div>
+    </div>
+
+    <div class="left-footer">
+      <button class="btn btn-export" style="width:100%" onclick="exportJSON()">
+        ⬇ エクスポート（data.json 形式）
+      </button>
+    </div>
+  </div>
+
+  <!-- ── 右：評価基準（静的） ── -->
+  <div class="right">
+    <div class="criteria-title">評価基準チェックリスト（参考）</div>
+
+    <div class="crit-card">
+      <div class="crit-name">Clarity — 明瞭性</div>
+      <div class="crit-desc">指示が明確で分かりやすいか</div>
+      <div class="crit-options">
+        <div class="crit-option"><span class="crit-option-val">1</span> Very Vague <span class="crit-option-note">— 非常に曖昧</span></div>
+        <div class="crit-option"><span class="crit-option-val">2</span> Somewhat Vague <span class="crit-option-note">— やや曖昧</span></div>
+        <div class="crit-option"><span class="crit-option-val">3</span> Average <span class="crit-option-note">— 普通</span></div>
+        <div class="crit-option"><span class="crit-option-val">4</span> Somewhat Clear <span class="crit-option-note">— やや明瞭</span></div>
+        <div class="crit-option"><span class="crit-option-val">5</span> Very Clear <span class="crit-option-note">— 非常に明瞭</span></div>
+      </div>
+    </div>
+
+    <div class="crit-card">
+      <div class="crit-name">Role Assignment — 役割付与</div>
+      <div class="crit-desc">LLM にペルソナ・専門性を与えているか</div>
+      <div class="crit-options">
+        <div class="crit-option"><span class="crit-option-val">No</span> 役割なし</div>
+        <div class="crit-option"><span class="crit-option-val">Yes</span> 役割あり</div>
+      </div>
+    </div>
+
+    <div class="crit-card">
+      <div class="crit-name">Prompt Structure Order — 構成順序</div>
+      <div class="crit-desc">ロール/前提 → メインタスク → 出力形式 の順が守られているか</div>
+      <div class="crit-options">
+        <div class="crit-option"><span class="crit-option-val">1</span> Not Followed <span class="crit-option-note">— 守られていない</span></div>
+        <div class="crit-option"><span class="crit-option-val">2</span> Partially Followed <span class="crit-option-note">— 一部守られている</span></div>
+        <div class="crit-option"><span class="crit-option-val">3</span> Fully Followed <span class="crit-option-note">— 完全に守られている</span></div>
+      </div>
+    </div>
+
+    <div class="crit-card">
+      <div class="crit-name">Target Audience — 対象者の指定</div>
+      <div class="crit-desc">誰向けの回答かが明示されているか（例: 中学生、初心者、経営者）</div>
+      <div class="crit-options">
+        <div class="crit-option"><span class="crit-option-val">1</span> None <span class="crit-option-note">— 指定なし</span></div>
+        <div class="crit-option"><span class="crit-option-val">2</span> Vague <span class="crit-option-note">— 曖昧な指定</span></div>
+        <div class="crit-option"><span class="crit-option-val">3</span> Mentioned <span class="crit-option-note">— 言及あり</span></div>
+        <div class="crit-option"><span class="crit-option-val">4</span> Clear <span class="crit-option-note">— 明確に指定</span></div>
+        <div class="crit-option"><span class="crit-option-val">5</span> Detailed <span class="crit-option-note">— 詳細に指定</span></div>
+      </div>
+    </div>
+
+    <div class="crit-card">
+      <div class="crit-name">Scope Limitation — スコープ限定</div>
+      <div class="crit-desc">回答の範囲やトピックが適切に絞られているか</div>
+      <div class="crit-options">
+        <div class="crit-option"><span class="crit-option-val">1</span> None <span class="crit-option-note">— 限定なし</span></div>
+        <div class="crit-option"><span class="crit-option-val">2</span> Too Broad <span class="crit-option-note">— 広すぎる</span></div>
+        <div class="crit-option"><span class="crit-option-val">3</span> Moderate <span class="crit-option-note">— ある程度限定</span></div>
+        <div class="crit-option"><span class="crit-option-val">4</span> Well Scoped <span class="crit-option-note">— 適切に限定</span></div>
+        <div class="crit-option"><span class="crit-option-val">5</span> Precisely Scoped <span class="crit-option-note">— 的確に限定</span></div>
+      </div>
+    </div>
+
+    <div class="crit-card">
+      <div class="crit-name">Output Format — フォーマット指定</div>
+      <div class="crit-desc">箇条書き・表・見出しなど出力の形式が指定されているか</div>
+      <div class="crit-options">
+        <div class="crit-option"><span class="crit-option-val">1</span> None <span class="crit-option-note">— 指定なし</span></div>
+        <div class="crit-option"><span class="crit-option-val">2</span> Vague <span class="crit-option-note">— 曖昧な指定</span></div>
+        <div class="crit-option"><span class="crit-option-val">3</span> Mentioned <span class="crit-option-note">— 言及あり</span></div>
+        <div class="crit-option"><span class="crit-option-val">4</span> Clear <span class="crit-option-note">— 明確に指定</span></div>
+        <div class="crit-option"><span class="crit-option-val">5</span> Detailed <span class="crit-option-note">— 詳細に指定</span></div>
+      </div>
+    </div>
+
+    <div class="crit-card">
+      <div class="crit-name">Example / Template — 具体例・テンプレート</div>
+      <div class="crit-desc">出力の具体例やテンプレートが示されているか</div>
+      <div class="crit-options">
+        <div class="crit-option"><span class="crit-option-val">1</span> None <span class="crit-option-note">— なし</span></div>
+        <div class="crit-option"><span class="crit-option-val">2</span> Hint Only <span class="crit-option-note">— ヒント程度</span></div>
+        <div class="crit-option"><span class="crit-option-val">3</span> Brief Example <span class="crit-option-note">— 簡単な例あり</span></div>
+        <div class="crit-option"><span class="crit-option-val">4</span> Clear Example <span class="crit-option-note">— 明確な例あり</span></div>
+        <div class="crit-option"><span class="crit-option-val">5</span> Full Template <span class="crit-option-note">— 完全なテンプレートあり</span></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+  const STORE_KEY = 'prompt-creator-v1';
+  let prompts = [];
+  let editingId = null;
+
+  // ── Init ──
+  function init() {
+    try {
+      const saved = localStorage.getItem(STORE_KEY);
+      if (saved) prompts = JSON.parse(saved);
+    } catch(e) {}
+    render();
+  }
+
+  // ── Render list ──
+  function render() {
+    document.getElementById('count-badge').textContent = `${prompts.length} 件`;
+    const el = document.getElementById('prompt-list');
+
+    if (prompts.length === 0) {
+      el.innerHTML = `<div class="empty-hint">
+        プロンプトを入力して「追加」を押してください<br>
+        右側の評価基準を参考に品質の高いプロンプトを作成しましょう
+      </div>`;
+      return;
+    }
+
+    el.innerHTML = prompts.map(p => `
+      <div class="prompt-item ${editingId === p.id ? 'editing' : ''}">
+        <span class="item-id">#${p.id}</span>
+        <span class="item-text">${esc(p.prompt)}</span>
+        <div class="item-actions">
+          <button class="btn-edit-sm" onclick="startEdit(${p.id})">編集</button>
+          <button class="btn-danger-sm" onclick="deletePrompt(${p.id})">削除</button>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  // ── Add ──
+  function addPrompt() {
+    const text = document.getElementById('prompt-input').value.trim();
+    if (!text) return;
+
+    if (editingId !== null) {
+      // 編集モード
+      const p = prompts.find(p => p.id === editingId);
+      if (p) p.prompt = text;
+      editingId = null;
+    } else {
+      // 新規追加
+      const maxId = prompts.length ? Math.max(...prompts.map(p => p.id)) : 0;
+      prompts.push({ id: maxId + 1, prompt: text });
+    }
+
+    save();
+    render();
+    document.getElementById('prompt-input').value = '';
+    document.querySelector('.btn-primary').textContent = '＋ 追加';
+  }
+
+  // ── Edit ──
+  function startEdit(id) {
+    const p = prompts.find(p => p.id === id);
+    if (!p) return;
+    editingId = id;
+    document.getElementById('prompt-input').value = p.prompt;
+    document.getElementById('prompt-input').focus();
+    document.querySelector('.btn-primary').textContent = '✓ 更新';
+    render();
+  }
+
+  // ── Delete ──
+  function deletePrompt(id) {
+    prompts = prompts.filter(p => p.id !== id);
+    if (editingId === id) {
+      editingId = null;
+      document.getElementById('prompt-input').value = '';
+      document.querySelector('.btn-primary').textContent = '＋ 追加';
+    }
+    save();
+    render();
+  }
+
+  // ── Clear input ──
+  function clearInput() {
+    editingId = null;
+    document.getElementById('prompt-input').value = '';
+    document.querySelector('.btn-primary').textContent = '＋ 追加';
+    render();
+  }
+
+  // ── Export ──
+  function exportJSON() {
+    if (!prompts.length) { alert('エクスポートするデータがありません'); return; }
+    const out = prompts.map(p => ({ id: p.id, prompt: p.prompt }));
+    const blob = new Blob([JSON.stringify(out, null, 2)], { type: 'application/json' });
+    const a = Object.assign(document.createElement('a'), {
+      href: URL.createObjectURL(blob),
+      download: `data_${today()}.json`
+    });
+    a.click();
+    URL.revokeObjectURL(a.href);
+  }
+
+  // ── Helpers ──
+  function save() { localStorage.setItem(STORE_KEY, JSON.stringify(prompts)); }
+  function today() { return new Date().toISOString().split('T')[0]; }
+  function esc(s) {
+    if (!s) return '';
+    return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+
+  // Ctrl+Enter で追加
+  document.getElementById('prompt-input').addEventListener('keydown', e => {
+    if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) addPrompt();
+  });
+
+  init();
+</script>
+</body>
+</html>

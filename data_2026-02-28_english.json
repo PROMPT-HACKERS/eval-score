@@ -1,0 +1,402 @@
+[
+  {
+    "id": 1,
+    "prompt": "Tell me about marketing."
+  },
+  {
+    "id": 2,
+    "prompt": "How do I lose weight?"
+  },
+  {
+    "id": 3,
+    "prompt": "Explain Python."
+  },
+  {
+    "id": 4,
+    "prompt": "What are some good ways to save money? I want to know a few tips."
+  },
+  {
+    "id": 5,
+    "prompt": "Can you help me write an email to my boss? It's about asking for a raise."
+  },
+  {
+    "id": 6,
+    "prompt": "Give me a summary of climate change and its effects. Keep it simple and not too long. Use some structure if possible."
+  },
+  {
+    "id": 7,
+    "prompt": "Explain how the stock market works. I'm not an expert. Please make it easy to understand and organize your answer somehow."
+  },
+  {
+    "id": 8,
+    "prompt": "You are an experienced financial advisor. Explain the basics of index fund investing for someone in their 30s who has never invested before. Use bullet points and keep it under 300 words."
+  },
+  {
+    "id": 9,
+    "prompt": "You are a professional fitness coach. A beginner who has never exercised regularly wants to start working out at home. Provide a simple weekly workout plan. Format the output as a table with columns: Day, Exercise, Duration, and Difficulty."
+  },
+  {
+    "id": 10,
+    "prompt": "You are a Michelin-starred chef with 20 years of experience in French cuisine.\n\nYour audience is a busy working parent in their 30s with basic cooking skills and limited time on weeknights.\n\nTask: Provide a step-by-step recipe for a classic beef stew using only ingredients available at a standard American grocery store. The total cooking time should be under 60 minutes.\n\nConstraints:\n- Budget: Under $20 for 4 servings\n- No special equipment required\n- Avoid rare or exotic ingredients\n\nOutput format — use the following template exactly:\n\n## [Recipe Name]\n**Prep Time:** X min | **Cook Time:** X min | **Serves:** X\n\n### Ingredients\n- [quantity] [ingredient]\n\n### Steps\n1. [Step description]\n\n### Tips\n- [One practical tip per line]"
+  },
+  {
+    "id": 11,
+    "prompt": "You are a senior software engineer specializing in backend development with Python.\n\nYour audience is a junior developer (6 months of experience) who understands basic Python but has never worked with REST APIs.\n\nTask: Explain how to build a simple REST API using FastAPI that has one GET endpoint returning a list of users from a hardcoded dictionary.\n\nConstraints:\n- Use only FastAPI and Uvicorn (no database)\n- Include error handling for missing users\n- Code must be beginner-readable with inline comments\n\nOutput format:\n1. Brief concept explanation (3 sentences max)\n2. Full working code block with comments\n3. How to run it locally (bullet points)\n4. One common mistake to avoid"
+  },
+  {
+    "id": 12,
+    "prompt": "Explain the French Revolution."
+  },
+  {
+    "id": 13,
+    "prompt": "I have a history essay due tomorrow about the French Revolution. Can you give me the main points? Make it easy to understand."
+  },
+  {
+    "id": 14,
+    "prompt": "You are a Silicon Valley venture capitalist who has reviewed over 500 startup pitch decks.\n\nMy audience is a first-time founder preparing to pitch a SaaS startup to seed-stage investors.\n\nTask: Review the structure of a typical 10-slide pitch deck and tell me what most founders get wrong on each slide.\n\nOutput as a table:\n| Slide # | Slide Name | Most Common Mistake | How to Fix It |"
+  },
+  {
+    "id": 15,
+    "prompt": "Help me write a college application essay. My topic is how working part-time at my family's convenience store taught me about responsibility. Around 650 words. Common App format."
+  },
+  {
+    "id": 16,
+    "prompt": "You are a meal prep expert and nutritionist.\n\nI am a single person in my late 20s trying to eat healthier on a tight budget of $50/week. I have about 2 hours free on Sundays to cook.\n\nTask: Design a 5-day meal prep plan (lunch and dinner only) using affordable, easy-to-find ingredients. Minimize food waste by reusing ingredients across multiple meals.\n\nOutput format:\n- Weekly shopping list grouped by category (Proteins / Vegetables / Pantry)\n- Daily meal plan as a table: Day | Lunch | Dinner | Prep Notes\n- Total estimated cost"
+  },
+  {
+    "id": 17,
+    "prompt": "Explain Kubernetes to me. I work with servers but never used it."
+  },
+  {
+    "id": 18,
+    "prompt": "You are a social media strategist with expertise in B2C brand building on Instagram and TikTok.\n\nTarget audience: A small candle business owner (non-marketer, 1 person operation) with under 500 followers trying to grow organically.\n\nTask: Create a 2-week content calendar for Instagram. Each post should have a clear goal (awareness, engagement, or conversion).\n\nConstraints:\n- No paid ads\n- Content must be creatable with just a smartphone\n- Max 1 post per day\n\nOutput format — repeat this block for each day:\n**Day X — [Goal]**\n- Content type: [Reel / Carousel / Story / Static post]\n- Caption hook: [First line of caption]\n- Hashtag strategy: [3 niche + 2 broad]\n- CTA: [What should viewers do?]"
+  },
+  {
+    "id": 19,
+    "prompt": "What should I do when I'm stressed from work?"
+  },
+  {
+    "id": 20,
+    "prompt": "You are a contract attorney specializing in freelance and creative industry agreements.\n\nYour audience is a freelance graphic designer with no legal background who just received their first large client contract worth $15,000.\n\nTask: List the 8 most important clauses a freelance designer should check before signing a client contract, and explain what a red flag looks like for each one.\n\nOutput format:\n### [Clause Name]\n- **What it means:** [Plain English explanation]\n- **Red flag example:** [Quoted or paraphrased contract language to watch out for]\n- **What to ask for instead:** [Suggested alternative]"
+  },
+  {
+    "id": 21,
+    "prompt": "You are an experienced 3rd-grade teacher.\n\nTask: Create a 45-minute lesson plan that introduces the concept of fractions to 8-year-olds using hands-on activities. Students have no prior knowledge of fractions. The classroom has no access to tablets or computers.\n\nOutput format:\n| Time | Activity | Materials Needed | Learning Goal |\n\nInclude a short formative assessment activity at the end to check understanding."
+  },
+  {
+    "id": 22,
+    "prompt": "Give me ideas for a mobile game."
+  },
+  {
+    "id": 23,
+    "prompt": "You are a science communication expert who helps academic researchers write grant proposals for non-specialist review panels.\n\nI am a molecular biology PhD candidate applying for a $50,000 early-career research grant. My research is on CRISPR-based gene editing to treat rare genetic diseases in children.\n\nTask: Write the 300-word \"Significance and Innovation\" section of my grant proposal. It must be compelling to reviewers who are scientists but NOT specialists in genetics.\n\nTone: Confident, clear, mission-driven — not overly technical.\nAvoid jargon. Define any technical term you must use.\nEnd with one sentence that connects the science to real patient impact."
+  },
+  {
+    "id": 24,
+    "prompt": "How do I cook pasta?"
+  },
+  {
+    "id": 25,
+    "prompt": "Recipe for chocolate cake."
+  },
+  {
+    "id": 26,
+    "prompt": "What can I make for dinner?"
+  },
+  {
+    "id": 27,
+    "prompt": "Can you give me a simple recipe for fried rice? I want it to be easy."
+  },
+  {
+    "id": 28,
+    "prompt": "How do I make pancakes from scratch? Nothing too complicated please."
+  },
+  {
+    "id": 29,
+    "prompt": "I want to bake bread at home. What do I need to do? Give me some steps."
+  },
+  {
+    "id": 30,
+    "prompt": "Give me a beginner-friendly recipe for homemade pizza. List the ingredients and steps. Keep it simple and use ingredients I can find at a regular grocery store."
+  },
+  {
+    "id": 31,
+    "prompt": "I want to make a healthy chicken stir-fry for dinner. Please give me a step-by-step recipe. I'm not a great cook so keep the instructions clear. It should serve 2 people."
+  },
+  {
+    "id": 32,
+    "prompt": "Explain how to make classic French onion soup. Include ingredients and cooking steps. I have basic cooking skills and a standard kitchen setup."
+  },
+  {
+    "id": 33,
+    "prompt": "You are a professional chef with expertise in Italian cuisine.\n\nI am a beginner home cook in my 20s trying to learn proper cooking techniques.\n\nTask: Teach me how to make a traditional carbonara from scratch. Focus on common mistakes beginners make and how to avoid them.\n\nOutput format:\n- Ingredient list\n- Step-by-step instructions\n- A \"Common Mistakes\" section at the end"
+  },
+  {
+    "id": 34,
+    "prompt": "You are a nutrition-focused cooking coach.\n\nYour audience is a busy parent trying to cook healthy weeknight meals in under 30 minutes.\n\nTask: Provide a recipe for a quick, balanced salmon dinner that includes vegetables and a starch. All ingredients should be available at a standard supermarket.\n\nOutput:\n- Ingredients list with quantities\n- Numbered cooking steps\n- Nutritional highlights (protein, key vitamins) in 2–3 sentences"
+  },
+  {
+    "id": 35,
+    "prompt": "You are an experienced pastry chef.\n\nI am an intermediate home baker who has made basic cookies and muffins before, but I have never attempted croissants.\n\nTask: Walk me through the process of making butter croissants at home over two days. Explain why each key step matters, not just what to do.\n\nFormat:\n- Day 1 steps and Day 2 steps in separate sections\n- Highlight each \"critical point\" in bold\n- End with a troubleshooting section covering 3 common failures"
+  },
+  {
+    "id": 36,
+    "prompt": "You are a Michelin-starred chef with 20 years of experience in modern Japanese cuisine.\n\nYour audience is a home cook in their 30s with intermediate skills who wants to impress guests at a dinner party. They have access to a well-stocked Asian grocery store and a standard Western kitchen (no wok, no steamer).\n\nTask: Provide a complete recipe for a restaurant-quality miso-glazed black cod (similar to Nobu's signature dish) that can be realistically executed at home.\n\nConstraints:\n- Marination time should fit within a 48-hour window\n- Substitute any hard-to-find ingredient with an accessible alternative\n- Total active cooking time should be under 30 minutes\n\nOutput format — use exactly this template:\n\n## [Dish Name]\n**Serves:** X | **Marination:** X hours | **Active Cook Time:** X min | **Difficulty:** Intermediate\n\n### Ingredients\n| Quantity | Ingredient | Substitution (if any) |\n\n### Method\n**Step X — [Step Title]**\n[Instruction with explanation of *why* this step matters]\n\n### Plating suggestion\n[2–3 sentences describing how to plate for a dinner party impression]\n\n### Make-ahead tips\n- [Bullet points for what can be prepared in advance]\n\n### Wine / drink pairing\n- [One suggestion with a brief reason]"
+  },
+  {
+    "id": 37,
+    "prompt": "You are a registered dietitian and professional cooking instructor who specializes in managing Type 2 diabetes through diet.\n\nYour audience is a 58-year-old man recently diagnosed with Type 2 diabetes who loves Southern American comfort food and is emotionally resistant to giving up his favorite meals.\n\nTask: Recreate a diabetes-friendly version of classic macaroni and cheese that closely mimics the taste and texture of the original while significantly reducing glycemic impact.\n\nConstraints:\n- Do not use artificial sweeteners or highly processed \"diet\" substitutes\n- The recipe must serve 4 and cost under $15\n- Cooking skill level: beginner to intermediate\n- Must be emotionally appealing — acknowledge his love for the original dish in the introduction\n\nOutput format:\n\n### Introduction (2–3 sentences)\n[Acknowledge the emotional connection to the dish and frame this as an upgrade, not a sacrifice]\n\n### What we're changing and why\n| Original Ingredient | Replacement | Reason |\n\n### Ingredients\n- [quantity] [ingredient]\n\n### Steps\n1. [Step with any important technique notes in italics]\n\n### Nutritional comparison (per serving)\n| | Original | This Recipe |\n|---|---|---|\n| Calories | | |\n| Net Carbs | | |\n| Protein | | |\n| Fiber | | |\n\n### Chef's note\n[1–2 sentences of encouragement and a suggestion for a next recipe to try]"
+  },
+  {
+    "id": 38,
+    "prompt": "How do I cook rice?"
+  },
+  {
+    "id": 39,
+    "prompt": "Make me a soup recipe."
+  },
+  {
+    "id": 40,
+    "prompt": "What's a good breakfast?"
+  },
+  {
+    "id": 41,
+    "prompt": "Give me a simple recipe for scrambled eggs. Keep it easy for beginners."
+  },
+  {
+    "id": 42,
+    "prompt": "How do I make tomato pasta? I want basic steps and ingredients."
+  },
+  {
+    "id": 43,
+    "prompt": "I'm a beginner cook. Give me a step-by-step recipe for beef tacos using ingredients from a regular grocery store. Serves 2 people."
+  },
+  {
+    "id": 44,
+    "prompt": "Explain how to make a classic Caesar salad, including the dressing from scratch. Use bullet points for ingredients and numbered steps for instructions."
+  },
+  {
+    "id": 45,
+    "prompt": "You are a professional chef. Give a beginner home cook a foolproof recipe for butter chicken. Use only supermarket ingredients. Format: ingredient list, then numbered steps, then one common mistake to avoid."
+  },
+  {
+    "id": 46,
+    "prompt": "You are a nutritionist and cooking coach. My audience is a college student with a tight budget ($5 per meal) and only a microwave and electric kettle. Suggest a high-protein breakfast recipe with those constraints. Output as a simple ingredient list and steps."
+  },
+  {
+    "id": 47,
+    "prompt": "You are a pastry chef with 15 years of experience. Your audience is an intermediate home baker attempting tiramisu for the first time for a dinner party. Provide a reliable recipe using only supermarket ingredients. Format: ingredient table with quantities, numbered steps, one \"critical technique\" callout per major step, and a brief make-ahead tip at the end."
+  },
+  {
+    "id": 48,
+    "prompt": "You are a Japanese home cooking expert. Your audience is a non-Japanese adult who has never made ramen from scratch and wants an authentic but achievable version at home. Constraints: no specialty equipment, under 90 minutes total. Format: ingredient list split by broth/toppings/noodles, numbered steps, and a 2-sentence note on which shortcuts are acceptable without ruining authenticity."
+  },
+  {
+    "id": 49,
+    "prompt": "How do I fry an egg?"
+  },
+  {
+    "id": 50,
+    "prompt": "Give me a cookie recipe."
+  },
+  {
+    "id": 51,
+    "prompt": "What can I cook with chicken and vegetables? Give me something quick and easy."
+  },
+  {
+    "id": 52,
+    "prompt": "I want to make homemade guacamole for a party. List the ingredients and steps. Serves about 6 people."
+  },
+  {
+    "id": 53,
+    "prompt": "Teach me how to make a basic vinaigrette dressing from scratch. I'm a beginner. Use bullet points for ingredients and short steps."
+  },
+  {
+    "id": 54,
+    "prompt": "You are a sushi chef. Give a beginner a simple recipe for homemade salmon nigiri using supermarket ingredients. Include a tip on how to handle the raw fish safely."
+  },
+  {
+    "id": 55,
+    "prompt": "You are a BBQ pitmaster. Your audience is a first-time griller trying to cook baby back ribs at home on a gas grill. Provide a step-by-step recipe with a simple dry rub. Format: ingredient list, prep steps, grilling steps, one \"don't skip this\" tip."
+  },
+  {
+    "id": 56,
+    "prompt": "You are a French pastry chef. A beginner wants to make crème brûlée for a date night at home. They have a basic kitchen but no culinary torch. Provide the recipe and suggest a realistic alternative to the torch for the caramel topping."
+  },
+  {
+    "id": 57,
+    "prompt": "You are a plant-based cooking coach. Your audience is a meat-eater trying to eat less meat one day a week. Give them a satisfying lentil bolognese recipe that doesn't feel like a compromise. Format: ingredients, numbered steps, one note explaining how to build depth of flavor without meat."
+  },
+  {
+    "id": 58,
+    "prompt": "You are a Korean home cooking expert. Your audience is a Western adult who loves Korean food at restaurants but has never cooked it at home. Provide a beginner-friendly recipe for japchae using ingredients available at an Asian grocery store. Format: ingredient list split by noodles/vegetables/sauce, numbered steps, and one substitution suggestion for hard-to-find ingredients."
+  },
+  {
+    "id": 59,
+    "prompt": "How do I boil an egg?"
+  },
+  {
+    "id": 60,
+    "prompt": "Give me a smoothie recipe."
+  },
+  {
+    "id": 61,
+    "prompt": "I want to make a simple salad for lunch. What ingredients do I need and how do I put it together?"
+  },
+  {
+    "id": 62,
+    "prompt": "How do I make homemade hummus? I'm a beginner. Give me an ingredient list and basic steps. I want to use a blender."
+  },
+  {
+    "id": 63,
+    "prompt": "Teach me how to make a classic grilled cheese sandwich. I'm cooking for my kids. Keep the steps simple and the ingredients basic."
+  },
+  {
+    "id": 64,
+    "prompt": "You are a Thai cooking instructor. Give a beginner a simple pad Thai recipe using ingredients from an Asian grocery store. Include a note on how to adjust the spice level."
+  },
+  {
+    "id": 65,
+    "prompt": "You are an Italian grandmother who has cooked risotto for 40 years. Teach an intermediate home cook how to make a classic mushroom risotto. Format: ingredient list, numbered steps, and a short note on the one technique that separates good risotto from great risotto."
+  },
+  {
+    "id": 66,
+    "prompt": "You are a professional chef specializing in Middle Eastern cuisine. Your audience is a home cook who wants to make shakshuka for a weekend brunch for 4 people. All ingredients should be available at a regular supermarket. Format: ingredient list, numbered steps, and two topping suggestions to elevate the presentation."
+  },
+  {
+    "id": 67,
+    "prompt": "You are a nutrition-focused cooking coach. Your audience is a 40-year-old man trying to build muscle who is tired of eating plain chicken breast. Provide three simple ways to season and cook chicken breast that are high-protein, low-fat, and actually flavorful. Format: one short paragraph per method, with cook time and key seasoning listed at the top of each."
+  },
+  {
+    "id": 68,
+    "prompt": "How do I create a for loop in Python?"
+  },
+  {
+    "id": 69,
+    "prompt": "Explain what an API is. I have no coding background. Keep it simple and use an everyday analogy."
+  },
+  {
+    "id": 70,
+    "prompt": "I'm a junior developer. How do I center a div in CSS? Give me two or three common methods with a short explanation of when to use each."
+  },
+  {
+    "id": 71,
+    "prompt": "You are a senior backend engineer. Explain the difference between SQL and NoSQL databases to a beginner developer choosing a database for their first web app. Format: a comparison table, then a one-paragraph recommendation based on common beginner use cases."
+  },
+  {
+    "id": 72,
+    "prompt": "You are a DevOps engineer with 10 years of experience. Your audience is a self-taught developer who has never deployed an app before. Walk them through deploying a simple Node.js app to a cloud server (AWS EC2). Format: numbered steps, with a \"why this matters\" note for any step beginners commonly skip."
+  },
+  {
+    "id": 73,
+    "prompt": "Write a professional email to reschedule a meeting."
+  },
+  {
+    "id": 74,
+    "prompt": "Help me write a short follow-up email after a job interview. I want to thank the interviewer and restate my interest in the role. Keep it under 150 words."
+  },
+  {
+    "id": 75,
+    "prompt": "You are a business writing coach. Write a formal email on behalf of a project manager informing a client that their product delivery will be delayed by two weeks due to supply chain issues. Tone: apologetic but confident. Format: subject line, opening, explanation, next steps, closing."
+  },
+  {
+    "id": 76,
+    "prompt": "Write a tagline for a coffee brand."
+  },
+  {
+    "id": 77,
+    "prompt": "You are a copywriter specializing in DTC (direct-to-consumer) brands. Your audience is a 28-year-old urban professional who values sustainability and minimalist design. Write three variations of a 2-sentence Instagram caption for a new reusable water bottle launch. For each variation, label the tone (e.g., Aspirational / Witty / Community-driven) and include one relevant hashtag set of 3 tags."
+  },
+  {
+    "id": 78,
+    "prompt": "What is Git?"
+  },
+  {
+    "id": 79,
+    "prompt": "How do I reverse a string in JavaScript? Show me the code with a brief explanation."
+  },
+  {
+    "id": 80,
+    "prompt": "I'm learning Python as a complete beginner. Explain what a function is and why I should use one. Use a simple real-life analogy before showing a code example."
+  },
+  {
+    "id": 81,
+    "prompt": "You are a senior frontend developer. Your audience is a beginner who just learned basic HTML and CSS. Explain what React is, why it exists, and when someone should start learning it versus sticking with vanilla JavaScript. Keep it under 200 words."
+  },
+  {
+    "id": 82,
+    "prompt": "Write me an out-of-office email."
+  },
+  {
+    "id": 83,
+    "prompt": "Help me write a short LinkedIn message to reconnect with a former colleague I haven't spoken to in two years. I want to catch up and subtly explore if they know of any job openings at their company. Keep it natural and not pushy."
+  },
+  {
+    "id": 84,
+    "prompt": "You are a business writing expert. Draft a one-page executive summary for a proposal to implement a new employee wellness program. Audience: C-suite executives who have limited time. Format: Problem (2 sentences), Proposed Solution (3 sentences), Expected Outcomes (3 bullet points), Budget Estimate (1 line), Recommended Next Step (1 sentence)."
+  },
+  {
+    "id": 85,
+    "prompt": "Give me ideas for a social media post about a new product."
+  },
+  {
+    "id": 86,
+    "prompt": "You are a brand strategist. My client runs a small independent bookstore competing against Amazon. Write a 3-sentence brand positioning statement that highlights what makes a local bookstore irreplaceable. Tone: warm, community-focused, quietly confident."
+  },
+  {
+    "id": 87,
+    "prompt": "You are a performance marketing specialist. Your audience is a small e-commerce business owner with no marketing background running their first Google Ads campaign with a $500/month budget. Explain the three most important metrics they should track and what action to take if each metric underperforms. Format: one short paragraph per metric with the metric name bolded at the start."
+  },
+  {
+    "id": 88,
+    "prompt": "Fix my code."
+  },
+  {
+    "id": 89,
+    "prompt": "You are a cybersecurity expert. Explain to a non-technical small business owner the top 3 things they should do immediately to protect their company from phishing attacks. Format: numbered list, each with a one-line action and a one-sentence reason why it matters."
+  },
+  {
+    "id": 90,
+    "prompt": "Write a resignation letter."
+  },
+  {
+    "id": 91,
+    "prompt": "You are a negotiation coach. I am a mid-level marketing manager preparing to negotiate a 15% salary increase with my current employer. Give me 3 specific opening lines I can use to start the conversation confidently. Label each by strategy (e.g., Value-based / Market-rate / Future-focused)."
+  },
+  {
+    "id": 92,
+    "prompt": "How do I grow Instagram followers?"
+  },
+  {
+    "id": 93,
+    "prompt": "You are a conversion copywriter. Write a subject line and preview text for a re-engagement email campaign targeting users who haven't opened any emails in 90 days. Provide 3 variations. Label each by psychological trigger used (e.g., Curiosity / FOMO / Personalization)."
+  },
+  {
+    "id": 94,
+    "prompt": "Explain machine learning to me."
+  },
+  {
+    "id": 95,
+    "prompt": "I'm a non-technical product manager. I need to write acceptance criteria for a login feature that supports Google OAuth. Give me a template I can reuse for similar features, then fill it in for this specific case."
+  },
+  {
+    "id": 96,
+    "prompt": "Help me write a business proposal."
+  },
+  {
+    "id": 97,
+    "prompt": "You are a SaaS pricing strategist. My audience is a first-time founder about to launch a B2B productivity tool. Compare three common pricing models (per-seat, usage-based, flat-rate) in a table showing pros, cons, and ideal use case for each. End with a one-sentence recommendation for an early-stage startup."
+  },
+  {
+    "id": 98,
+    "prompt": "What is Docker?"
+  },
+  {
+    "id": 99,
+    "prompt": "You are a UX writing specialist. Your audience is a mobile app developer with no copywriting experience. Write error message copy for 3 common scenarios: failed login, lost internet connection, and payment declined. Format: Scenario | Bad Example | Improved Version | Why It's Better."
+  },
+  {
+    "id": 100,
+    "prompt": "Help me write a cold email to a potential client."
+  }
+]

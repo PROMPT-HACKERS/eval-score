@@ -55,6 +55,14 @@
       background: #2980b9;
     }
 
+    #data-file-select {
+      font-size: 13px;
+      padding: 4px 8px;
+      border-radius: 6px;
+      border: none;
+      cursor: pointer;
+    }
+
     .progress {
       font-size: 14px;
       background: rgba(255,255,255,0.15);
@@ -631,6 +639,11 @@
     <h1>Prompt Evaluation Tool</h1>
     <div class="header-right">
       <a href="analyze.html" class="btn-dashboard">Dashboard</a>
+      <select id="data-file-select">
+        <option value="data.json">data.json</option>
+        <option value="data_2026-02-28_Japanse.json">Japanese (2026-02-28)</option>
+        <option value="data_2026-02-28_english.json">English (2026-02-28)</option>
+      </select>
       <div class="progress" id="progress">Loading...</div>
     </div>
   </header>
@@ -681,7 +694,7 @@
     async function init() {
       try {
         const [dataRes, configRes] = await Promise.all([
-          fetch("data.json"),
+          fetch(document.getElementById("data-file-select").value),
           fetch("config.json"),
         ]);
 
@@ -1008,6 +1021,8 @@
     });
 
     init();
+
+    document.getElementById("data-file-select").addEventListener("change", init);
   </script>
 </body>
 </html>
