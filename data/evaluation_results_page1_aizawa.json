@@ -1,0 +1,122 @@
+[
+  {
+    "id": 1,
+    "evaluations": {
+      "Clarity": 5,
+      "Role Assignment": 1,
+      "Prompt Structure Order": 3,
+      "Target Audience": 5,
+      "Scope Limitation": 5,
+      "Output Format": 5,
+      "Example / Template": 5
+    }
+  },
+  {
+    "id": 2,
+    "evaluations": {
+      "Clarity": 1,
+      "Role Assignment": 0,
+      "Prompt Structure Order": 1,
+      "Target Audience": 1,
+      "Scope Limitation": 1,
+      "Output Format": 1,
+      "Example / Template": 1
+    }
+  },
+  {
+    "id": 3,
+    "evaluations": {
+      "Clarity": 3,
+      "Role Assignment": 1,
+      "Prompt Structure Order": 3,
+      "Target Audience": 3,
+      "Scope Limitation": 5,
+      "Output Format": 4,
+      "Example / Template": 2
+    }
+  },
+  {
+    "id": 4,
+    "evaluations": {
+      "Clarity": 4,
+      "Role Assignment": 1,
+      "Prompt Structure Order": 3,
+      "Target Audience": 5,
+      "Scope Limitation": 3,
+      "Output Format": 4,
+      "Example / Template": 5
+    }
+  },
+  {
+    "id": 5,
+    "evaluations": {
+      "Clarity": 2,
+      "Role Assignment": 0,
+      "Prompt Structure Order": 1,
+      "Target Audience": 1,
+      "Scope Limitation": 1,
+      "Output Format": 1,
+      "Example / Template": 1
+    }
+  },
+  {
+    "id": 6,
+    "evaluations": {
+      "Clarity": 4,
+      "Role Assignment": 1,
+      "Prompt Structure Order": 3,
+      "Target Audience": 4,
+      "Scope Limitation": 4,
+      "Output Format": 4,
+      "Example / Template": 5
+    }
+  },
+  {
+    "id": 7,
+    "evaluations": {
+      "Clarity": 3,
+      "Role Assignment": 1,
+      "Prompt Structure Order": 2,
+      "Target Audience": 1,
+      "Scope Limitation": 3,
+      "Output Format": 1,
+      "Example / Template": 1
+    }
+  },
+  {
+    "id": 8,
+    "evaluations": {
+      "Clarity": 3,
+      "Role Assignment": 1,
+      "Prompt Structure Order": 3,
+      "Target Audience": 3,
+      "Scope Limitation": 3,
+      "Output Format": 4,
+      "Example / Template": 3
+    }
+  },
+  {
+    "id": 9,
+    "evaluations": {
+      "Clarity": 1,
+      "Role Assignment": 0,
+      "Prompt Structure Order": 1,
+      "Target Audience": 1,
+      "Scope Limitation": 2,
+      "Output Format": 1,
+      "Example / Template": 1
+    }
+  },
+  {
+    "id": 10,
+    "evaluations": {
+      "Clarity": 5,
+      "Role Assignment": 1,
+      "Prompt Structure Order": 3,
+      "Target Audience": 4,
+      "Scope Limitation": 5,
+      "Output Format": 4,
+      "Example / Template": 3
+    }
+  }
+]
