@@ -689,6 +689,7 @@
     let currentPage = null; // null = landing, 1-based page number
     let currentIndex = 0;   // index within current page's items (0-based)
     let results = {};
+    let submittedPages = new Set();
 
     function getTotalPages() {
       return Math.ceil(data.length / ITEMS_PER_PAGE);
@@ -930,7 +931,10 @@
       }
 
       const pageDone = pageData.every((d) => results[d.id] !== undefined);
-      if (!submitPageBtn.textContent.startsWith(`Submitted ✓ Page ${currentPage}`)) {
+      if (submittedPages.has(currentPage)) {
+        submitPageBtn.disabled = true;
+        submitPageBtn.textContent = `Submitted ✓ Page ${currentPage}`;
+      } else {
         submitPageBtn.disabled = !pageDone;
         submitPageBtn.textContent = `Submit Page ${currentPage}`;
       }
@@ -1045,6 +1049,7 @@
         });
         const json = await res.json();
         if (json.status !== 'ok') throw new Error(json.message || 'Server error');
+        submittedPages.add(page);
         btn.textContent = `Submitted ✓ Page ${page}`;
       } catch(err) {
         alert('Submission failed: ' + err.message);
