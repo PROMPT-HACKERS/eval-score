@@ -56,6 +56,14 @@
       margin-bottom: 16px;
     }
 
+    .sticky-prompt {
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      background: #f5f7fa;
+      padding-bottom: 4px;
+    }
+
     .data-card {
       background: #fff;
       border-radius: 8px;
@@ -292,6 +300,115 @@
       margin-left: 8px;
     }
 
+    .pagination-bar {
+      max-width: 800px;
+      width: 100%;
+      margin: 0 auto;
+      padding: 12px 16px 0;
+      display: flex;
+      gap: 4px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .pagination-bar a {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 36px;
+      height: 36px;
+      padding: 4px 10px;
+      border-radius: 6px;
+      background: #ecf0f1;
+      color: #2c3e50;
+      text-decoration: none;
+      font-size: 14px;
+      font-weight: 600;
+      transition: background 0.15s;
+    }
+
+    .pagination-bar a:hover {
+      background: #d5dbdb;
+    }
+
+    .pagination-bar a.active {
+      background: #3498db;
+      color: #fff;
+    }
+
+    .page-selector {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 16px;
+      padding: 16px 0;
+    }
+
+    .page-card {
+      display: block;
+      background: #fff;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+      padding: 24px;
+      text-decoration: none;
+      color: #333;
+      transition: box-shadow 0.2s, transform 0.15s;
+      text-align: center;
+    }
+
+    .page-card:hover {
+      box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+      transform: translateY(-2px);
+    }
+
+    .page-card .page-number {
+      font-size: 28px;
+      font-weight: 700;
+      color: #3498db;
+      margin-bottom: 8px;
+    }
+
+    .page-card .page-range {
+      font-size: 13px;
+      color: #7f8c8d;
+    }
+
+    .page-card .page-status {
+      margin-top: 8px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .page-card .page-status.complete {
+      color: #27ae60;
+    }
+
+    .page-card .page-status.partial {
+      color: #e67e22;
+    }
+
+    .page-card-wrapper {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .btn-page-download {
+      width: 100%;
+      padding: 8px;
+      border: none;
+      border-radius: 6px;
+      background: #3498db;
+      color: #fff;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+
+    .btn-page-download:hover {
+      background: #2980b9;
+    }
+
     .loading {
       text-align: center;
       padding: 60px;
@@ -308,22 +425,104 @@
 
     @media (max-width: 600px) {
       header {
-        flex-direction: column;
+        flex-direction: row;
         gap: 8px;
-        text-align: center;
-        padding: 12px 16px;
+        padding: 10px 12px;
+      }
+
+      header h1 {
+        font-size: 16px;
+      }
+
+      .progress {
+        font-size: 11px;
+        padding: 4px 10px;
+        white-space: nowrap;
+      }
+
+      .pagination-bar {
+        padding: 8px 12px 0;
+        gap: 3px;
+      }
+
+      .pagination-bar a {
+        min-width: 32px;
+        height: 32px;
+        font-size: 12px;
+        padding: 2px 8px;
       }
 
       main {
-        margin: 16px auto;
+        margin: 8px auto;
+        padding: 0 8px;
       }
 
-      .data-card, .eval-section {
-        padding: 16px;
+      .nav-info {
+        font-size: 12px;
+        margin-bottom: 8px;
+      }
+
+      .sticky-prompt {
+        padding-bottom: 2px;
+      }
+
+      .data-card {
+        padding: 10px 12px;
+        margin-bottom: 8px;
+        border-radius: 6px;
+      }
+
+      .data-card h2 {
+        font-size: 13px;
+        margin-bottom: 6px;
+        padding-bottom: 4px;
+      }
+
+      .data-field {
+        margin-bottom: 0;
+      }
+
+      .data-field .label {
+        font-size: 10px;
+        margin-bottom: 2px;
+      }
+
+      .data-field .value {
+        font-size: 13px;
+        line-height: 1.5;
+        padding: 6px 8px;
+        max-height: 25vh;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+      }
+
+      .eval-section {
+        padding: 12px;
+        border-radius: 6px;
+      }
+
+      .eval-section h2 {
+        font-size: 13px;
+        margin-bottom: 10px;
+        padding-bottom: 4px;
+      }
+
+      .eval-item {
+        margin-bottom: 12px;
+        padding-bottom: 12px;
+      }
+
+      .eval-item .criterion-name {
+        font-size: 13px;
+      }
+
+      .eval-item .criterion-desc {
+        font-size: 11px;
+        margin-bottom: 6px;
       }
 
       .radio-group label {
-        padding: 12px 2px;
+        padding: 10px 2px;
         min-height: 44px;
       }
 
@@ -335,9 +534,13 @@
         font-size: 9px;
       }
 
+      footer {
+        padding: 10px 12px;
+      }
+
       .footer-inner {
         flex-direction: column;
-        gap: 8px;
+        gap: 6px;
       }
 
       .nav-buttons, .action-buttons {
@@ -358,8 +561,37 @@
       }
 
       button {
-        padding: 12px 16px;
-        font-size: 14px;
+        padding: 10px 12px;
+        font-size: 13px;
+      }
+
+      .page-selector {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 10px;
+        padding: 8px 0;
+      }
+
+      .page-card {
+        padding: 16px 12px;
+      }
+
+      .page-card .page-number {
+        font-size: 22px;
+        margin-bottom: 4px;
+      }
+
+      .page-card .page-range {
+        font-size: 11px;
+      }
+
+      .page-card .page-status {
+        font-size: 11px;
+      }
+
+      .btn-page-download {
+        padding: 10px;
+        font-size: 12px;
+        min-height: 40px;
       }
     }
   </style>
@@ -369,6 +601,8 @@
     <h1>Prompt Evaluation Tool</h1>
     <div class="progress" id="progress">Loading...</div>
   </header>
+
+  <nav class="pagination-bar" id="pagination-bar"></nav>
 
   <main id="main">
     <div class="loading">Loading data...</div>
@@ -381,16 +615,35 @@
         <button class="btn-nav" id="btn-next" disabled>Next &#9654;</button>
       </div>
       <div class="action-buttons">
-        <button class="btn-download" id="btn-download" disabled>Download Results</button>
+        <button class="btn-download" id="btn-download-page" disabled>Download Page</button>
       </div>
     </div>
   </footer>
 
   <script>
+    const ITEMS_PER_PAGE = 10;
+
     let data = [];
     let config = null;
-    let currentIndex = 0;
+    let currentPage = null; // null = landing, 1-based page number
+    let currentIndex = 0;   // index within current page's items (0-based)
     let results = {};
+
+    function getTotalPages() {
+      return Math.ceil(data.length / ITEMS_PER_PAGE);
+    }
+
+    function getPageData(page) {
+      const start = (page - 1) * ITEMS_PER_PAGE;
+      return data.slice(start, start + ITEMS_PER_PAGE);
+    }
+
+    function getPageFromHash() {
+      const hash = location.hash.replace("#", "");
+      const num = parseInt(hash, 10);
+      if (isNaN(num) || num < 1 || num > getTotalPages()) return null;
+      return num;
+    }
 
     async function init() {
       try {
@@ -400,13 +653,15 @@
         ]);
 
         if (!dataRes.ok || !configRes.ok) {
-          throw new Error("データの読み込みに失敗しました");
+          throw new Error("Failed to load data");
         }
 
         data = await dataRes.json();
         config = await configRes.json();
 
-        render();
+        currentPage = getPageFromHash();
+        currentIndex = 0;
+        renderAll();
       } catch (e) {
         document.getElementById("main").innerHTML =
           '<div class="error">Failed to load data.<br>Please start a local server with: npx serve .</div>';
@@ -414,23 +669,87 @@
       }
     }
 
-    function saveCurrentEvaluations() {
-      const item = data[currentIndex];
-      results[item.id] = {
-        id: item.id,
-        evaluations: getEvaluations(),
-      };
+    function renderPaginationBar() {
+      const bar = document.getElementById("pagination-bar");
+      if (!data.length) { bar.innerHTML = ""; return; }
+
+      const totalPages = getTotalPages();
+      const links = [];
+      for (let i = 1; i <= totalPages; i++) {
+        const activeClass = i === currentPage ? "active" : "";
+        links.push(`<a href="#${i}" class="${activeClass}">Page ${i}</a>`);
+      }
+      bar.innerHTML = links.join("");
     }
 
-    function render() {
-      const item = data[currentIndex];
+    function renderLanding() {
+      const totalPages = getTotalPages();
       const confirmedCount = Object.keys(results).length;
-      const isLast = currentIndex === data.length - 1;
-      const isConfirmed = results[item.id] !== undefined;
-      const savedEvals = results[item.id]?.evaluations || {};
 
       document.getElementById("progress").textContent =
         `Evaluated: ${confirmedCount} / ${data.length}`;
+
+      const cards = [];
+      for (let p = 1; p <= totalPages; p++) {
+        const pageData = getPageData(p);
+        const startNum = (p - 1) * ITEMS_PER_PAGE + 1;
+        const endNum = (p - 1) * ITEMS_PER_PAGE + pageData.length;
+        const evaluated = pageData.filter(d => results[d.id] !== undefined).length;
+
+        const isPageComplete = evaluated === pageData.length;
+        let statusHtml = "";
+        if (isPageComplete) {
+          statusHtml = `<div class="page-status complete">${evaluated} / ${pageData.length} Complete</div>`;
+        } else if (evaluated > 0) {
+          statusHtml = `<div class="page-status partial">${evaluated} / ${pageData.length} Evaluated</div>`;
+        } else {
+          statusHtml = `<div class="page-status">${evaluated} / ${pageData.length} Evaluated</div>`;
+        }
+
+        const downloadBtnHtml = isPageComplete
+          ? `<button class="btn-page-download" data-page="${p}">Download</button>`
+          : "";
+
+        cards.push(`
+          <div class="page-card-wrapper">
+            <a href="#${p}" class="page-card">
+              <div class="page-number">${p}</div>
+              <div class="page-range">Items ${startNum} – ${endNum}</div>
+              ${statusHtml}
+            </a>
+            ${downloadBtnHtml}
+          </div>
+        `);
+      }
+
+      document.getElementById("main").innerHTML = `
+        <div class="nav-info">Select a page to begin evaluation</div>
+        <div class="page-selector">${cards.join("")}</div>
+      `;
+
+      document.querySelectorAll(".btn-page-download").forEach((btn) => {
+        btn.addEventListener("click", (e) => {
+          e.stopPropagation();
+          downloadPageResults(parseInt(btn.dataset.page, 10));
+        });
+      });
+
+      document.getElementById("btn-prev").disabled = true;
+      document.getElementById("btn-next").disabled = true;
+      updateButtons();
+    }
+
+    function renderItem() {
+      const pageData = getPageData(currentPage);
+      const item = pageData[currentIndex];
+      const confirmedCount = Object.keys(results).length;
+      const isLastInPage = currentIndex === pageData.length - 1;
+      const isConfirmed = results[item.id] !== undefined;
+      const savedEvals = results[item.id]?.evaluations || {};
+      const pageEvaluated = pageData.filter(d => results[d.id] !== undefined).length;
+
+      document.getElementById("progress").textContent =
+        `Page ${currentPage}: ${pageEvaluated} / ${pageData.length} | Total: ${confirmedCount} / ${data.length}`;
 
       const promptHtml = `
         <div class="data-field">
@@ -473,13 +792,15 @@
         .join("");
 
       document.getElementById("main").innerHTML = `
-        <div class="nav-info">
-          Item ${currentIndex + 1} / ${data.length} (ID: ${item.id})
-          ${isConfirmed ? '<span class="confirmed-badge">Saved</span>' : ""}
-        </div>
-        <div class="data-card">
-          <h2>Prompt</h2>
-          ${promptHtml}
+        <div class="sticky-prompt">
+          <div class="nav-info">
+            Page ${currentPage} – Item ${currentIndex + 1} / ${pageData.length} (ID: ${item.id})
+            ${isConfirmed ? '<span class="confirmed-badge">Saved</span>' : ""}
+          </div>
+          <div class="data-card">
+            <h2>Prompt</h2>
+            ${promptHtml}
+          </div>
         </div>
         <div class="eval-section">
           <h2>Evaluation</h2>
@@ -496,28 +817,50 @@
         });
       });
 
-      // Update next button label for last page
       const nextBtn = document.getElementById("btn-next");
-      nextBtn.textContent = isLast && !isConfirmed ? "Finish" : "Next \u25B6";
+      nextBtn.textContent = isLastInPage && !isConfirmed ? "Finish" : "Next \u25B6";
 
       updateButtons();
+    }
+
+    function renderAll() {
+      renderPaginationBar();
+      if (currentPage === null) {
+        renderLanding();
+      } else {
+        renderItem();
+      }
+    }
+
+    function saveCurrentEvaluations() {
+      const pageData = getPageData(currentPage);
+      const item = pageData[currentIndex];
+      results[item.id] = {
+        id: item.id,
+        evaluations: getEvaluations(),
+      };
     }
 
     function updateButtons() {
       const prevBtn = document.getElementById("btn-prev");
       const nextBtn = document.getElementById("btn-next");
-      const downloadBtn = document.getElementById("btn-download");
+      const downloadPageBtn = document.getElementById("btn-download-page");
 
-      const item = data[currentIndex];
+      if (currentPage === null) {
+        downloadPageBtn.disabled = true;
+        downloadPageBtn.textContent = "Download Page";
+        return;
+      }
+
+      const pageData = getPageData(currentPage);
+      const item = pageData[currentIndex];
       const isConfirmed = results[item.id] !== undefined;
       const allSelected = allCriteriaSelected();
-      const isLast = currentIndex === data.length - 1;
+      const isLastInPage = currentIndex === pageData.length - 1;
 
       prevBtn.disabled = currentIndex === 0;
 
-      // "次へ" is disabled if: current page is not yet confirmed AND not all criteria are selected
-      // On last page when already confirmed, disable (nowhere to go)
-      if (isConfirmed && isLast) {
+      if (isConfirmed && isLastInPage) {
         nextBtn.disabled = true;
       } else if (isConfirmed) {
         nextBtn.disabled = false;
@@ -525,8 +868,9 @@
         nextBtn.disabled = !allSelected;
       }
 
-      const allDone = data.every((d) => results[d.id] !== undefined);
-      downloadBtn.disabled = !allDone;
+      const pageDone = pageData.every((d) => results[d.id] !== undefined);
+      downloadPageBtn.disabled = !pageDone;
+      downloadPageBtn.textContent = `Download Page ${currentPage}`;
     }
 
     function allCriteriaSelected() {
@@ -554,41 +898,80 @@
     }
 
     document.getElementById("btn-prev").addEventListener("click", () => {
+      if (currentPage === null) return;
       if (currentIndex > 0) {
         currentIndex--;
-        render();
+        renderAll();
       }
     });
 
     document.getElementById("btn-next").addEventListener("click", () => {
-      const item = data[currentIndex];
+      if (currentPage === null) return;
+      const pageData = getPageData(currentPage);
+      const item = pageData[currentIndex];
       const isConfirmed = results[item.id] !== undefined;
 
-      // Save if not yet confirmed
       if (!isConfirmed) {
         if (!allCriteriaSelected()) return;
         saveCurrentEvaluations();
       }
 
-      // Advance to next page if not last
-      if (currentIndex < data.length - 1) {
+      if (currentIndex < pageData.length - 1) {
         currentIndex++;
       }
 
-      render();
+      renderAll();
     });
 
-    document.getElementById("btn-download").addEventListener("click", () => {
-      const output = data.map((d) => results[d.id]);
-      const blob = new Blob([JSON.stringify(output, null, 2)], {
+    function downloadJson(data, filename) {
+      const blob = new Blob([JSON.stringify(data, null, 2)], {
         type: "application/json",
       });
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = "evaluation_results.json";
+      a.download = filename;
       a.click();
       URL.revokeObjectURL(url);
+    }
+
+    function toNumericValue(criterion, value) {
+      const c = config.criteria.find((cr) => cr.name === criterion);
+      if (!c) return value;
+      if (c.type === "boolean") {
+        return value === "Yes" ? 1 : 0;
+      }
+      const num = parseInt(value, 10);
+      return isNaN(num) ? value : num;
+    }
+
+    function toNumericEvaluations(evals) {
+      const out = {};
+      for (const [key, val] of Object.entries(evals)) {
+        out[key] = toNumericValue(key, val);
+      }
+      return out;
+    }
+
+    function downloadPageResults(page) {
+      const pageData = getPageData(page);
+      const output = pageData.map((d) => ({
+        id: results[d.id].id,
+        evaluations: toNumericEvaluations(results[d.id].evaluations),
+      }));
+      downloadJson(output, `evaluation_results_page${page}.json`);
+    }
+
+    document.getElementById("btn-download-page").addEventListener("click", () => {
+      if (currentPage === null) return;
+      downloadPageResults(currentPage);
+    });
+
+    window.addEventListener("hashchange", () => {
+      if (!data.length) return;
+      currentPage = getPageFromHash();
+      currentIndex = 0;
+      renderAll();
     });
 
     init();
