@@ -1050,7 +1050,7 @@
         const json = await res.json();
         if (json.status !== 'ok') throw new Error(json.message || 'Server error');
         submittedPages.add(page);
-        btn.textContent = `Submitted ✓ Page ${page}`;
+        updateButtons();
       } catch(err) {
         alert('Submission failed: ' + err.message);
         btn.disabled = false;
@@ -1067,6 +1067,7 @@
       if (!data.length) return;
       currentPage = getPageFromHash();
       currentIndex = 0;
+      document.getElementById('btn-submit-page').textContent = 'Submit Page';
       renderAll();
     });
 
