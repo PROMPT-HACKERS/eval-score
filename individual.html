@@ -433,9 +433,9 @@ function getEvaluatorColor(name) {
 
 const CRITERIA = [
   'Clarity', 'Role Assignment', 'Prompt Structure Order',
-  'Target Audience', 'Scope Limitation', 'Output Format', 'Example / Template'
+  'Target Audience', 'Scope Limitation', 'Output Format & Examples'
 ];
-const CRITERIA_SHORT = ['Clarity', 'Role', 'Structure', 'Audience', 'Scope', 'Format', 'Example'];
+const CRITERIA_SHORT = ['Clarity', 'Role', 'Structure', 'Audience', 'Scope', 'Format & Ex'];
 
 let allData = {};
 let promptData = {};
@@ -512,13 +512,12 @@ async function loadData() {
     allData[name][id] = {
       id,
       evaluations: {
-        'Clarity':                parseInt(row['Clarity'], 10),
-        'Role Assignment':        parseInt(row['Role Assignment'], 10),
-        'Prompt Structure Order': parseInt(row['Prompt Structure Order'], 10),
-        'Target Audience':        parseInt(row['Target Audience'], 10),
-        'Scope Limitation':       parseInt(row['Scope Limitation'], 10),
-        'Output Format':          parseInt(row['Output Format'], 10),
-        'Example / Template':     parseInt(row['Example / Template'], 10),
+        'Clarity':                  parseInt(row['Clarity'], 10),
+        'Role Assignment':          parseInt(row['Role Assignment'], 10),
+        'Prompt Structure Order':   parseInt(row['Prompt Structure Order'], 10),
+        'Target Audience':          parseInt(row['Target Audience'], 10),
+        'Scope Limitation':         parseInt(row['Scope Limitation'], 10),
+        'Output Format & Examples': parseInt(row['Output Format & Examples'], 10),
       },
     };
   });
@@ -712,7 +711,7 @@ function renderPromptBar() {
     options: {
       scales: {
         x: { ticks: { color: '#94a3b8' }, grid: { color: '#1e293b' } },
-        y: { min: 0, max: 35, ticks: { color: '#94a3b8' }, grid: { color: '#1e293b' } },
+        y: { min: 0, max: 30, ticks: { color: '#94a3b8' }, grid: { color: '#1e293b' } },
       },
       plugins: {
         legend: { display: false },

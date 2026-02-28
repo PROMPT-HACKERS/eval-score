@@ -52,25 +52,14 @@
       ]
     },
     {
-      "name": "Output Format",
-      "description": "フォーマット指定 - 箇条書き・表・見出しなど出力の形式が指定されているか",
+      "name": "Output Format & Examples",
+      "description": "出力フォーマット・具体例 - 出力形式と具体例・テンプレートが指定されているか",
       "options": [
         { "value": "1: None", "note": "指定なし" },
-        { "value": "2: Vague", "note": "曖昧な指定" },
-        { "value": "3: Mentioned", "note": "言及あり" },
-        { "value": "4: Clear", "note": "明確に指定" },
-        { "value": "5: Detailed", "note": "詳細に指定" }
-      ]
-    },
-    {
-      "name": "Example / Template",
-      "description": "具体例・テンプレート提示 - 出力の具体例やテンプレートが示されているか",
-      "options": [
-        { "value": "1: None", "note": "なし" },
-        { "value": "2: Hint Only", "note": "ヒント程度" },
-        { "value": "3: Brief Example", "note": "簡単な例あり" },
-        { "value": "4: Clear Example", "note": "明確な例あり" },
-        { "value": "5: Full Template", "note": "完全なテンプレートあり" }
+        { "value": "2: Minimal", "note": "形式のみ曖昧" },
+        { "value": "3: Partial", "note": "形式または例あり" },
+        { "value": "4: Clear", "note": "形式と例が明確" },
+        { "value": "5: Comprehensive", "note": "詳細な形式・完全なテンプレート" }
       ]
     }
   ]
