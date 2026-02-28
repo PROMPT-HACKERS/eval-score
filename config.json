@@ -24,33 +24,53 @@
       "name": "Prompt Structure Order",
       "description": "構成順序 - ロール/前提→メインタスク（エラー内容・疑問点・やりたいこと）→出力形式の順番が守られているか",
       "options": [
-        { "value": "1: Completely Wrong", "note": "順序が全く守られていない" },
-        { "value": "2: Mostly Wrong", "note": "大部分が順序通りでない" },
-        { "value": "3: Partial", "note": "一部守られている" },
-        { "value": "4: Mostly Correct", "note": "おおむね順序通り" },
-        { "value": "5: Perfect", "note": "完全に順序通り" }
+        { "value": "1: Not Followed", "note": "守られていない" },
+        { "value": "2: Partially Followed", "note": "一部守られている" },
+        { "value": "3: Fully Followed", "note": "完全に守られている" }
       ]
     },
     {
-      "name": "Constraints / Conditions",
-      "description": "制約・条件の指定 - 文字数・対象者などの条件が設定されているか",
+      "name": "Target Audience",
+      "description": "対象者の指定 - 誰向けの回答かが明示されているか（例: 中学生、初心者、経営者）",
       "options": [
-        { "value": "1: None", "note": "なし" },
-        { "value": "2: Insufficient", "note": "不十分" },
-        { "value": "3: Average", "note": "普通" },
-        { "value": "4: Appropriate", "note": "適切" },
-        { "value": "5: Excellent", "note": "非常に適切" }
+        { "value": "1: None", "note": "指定なし" },
+        { "value": "2: Vague", "note": "曖昧な指定" },
+        { "value": "3: Mentioned", "note": "言及あり" },
+        { "value": "4: Clear", "note": "明確に指定" },
+        { "value": "5: Detailed", "note": "詳細に指定" }
       ]
     },
     {
-      "name": "Output Format Specification",
-      "description": "出力形式の指定 - 箇条書き・表などのフォーマットが指定されているか",
+      "name": "Scope Limitation",
+      "description": "スコープ・範囲の限定 - 回答の範囲やトピックが適切に絞られているか",
+      "options": [
+        { "value": "1: None", "note": "限定なし" },
+        { "value": "2: Too Broad", "note": "広すぎる" },
+        { "value": "3: Moderate", "note": "ある程度限定" },
+        { "value": "4: Well Scoped", "note": "適切に限定" },
+        { "value": "5: Precisely Scoped", "note": "的確に限定" }
+      ]
+    },
+    {
+      "name": "Output Format",
+      "description": "フォーマット指定 - 箇条書き・表・見出しなど出力の形式が指定されているか",
+      "options": [
+        { "value": "1: None", "note": "指定なし" },
+        { "value": "2: Vague", "note": "曖昧な指定" },
+        { "value": "3: Mentioned", "note": "言及あり" },
+        { "value": "4: Clear", "note": "明確に指定" },
+        { "value": "5: Detailed", "note": "詳細に指定" }
+      ]
+    },
+    {
+      "name": "Example / Template",
+      "description": "具体例・テンプレート提示 - 出力の具体例やテンプレートが示されているか",
       "options": [
         { "value": "1: None", "note": "なし" },
-        { "value": "2: Insufficient", "note": "不十分" },
-        { "value": "3: Average", "note": "普通" },
-        { "value": "4: Appropriate", "note": "適切" },
-        { "value": "5: Excellent", "note": "非常に適切" }
+        { "value": "2: Hint Only", "note": "ヒント程度" },
+        { "value": "3: Brief Example", "note": "簡単な例あり" },
+        { "value": "4: Clear Example", "note": "明確な例あり" },
+        { "value": "5: Full Template", "note": "完全なテンプレートあり" }
       ]
     }
   ]
