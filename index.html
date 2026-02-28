@@ -930,7 +930,7 @@
       }
 
       const pageDone = pageData.every((d) => results[d.id] !== undefined);
-      if (!submitPageBtn.textContent.startsWith('Submitted')) {
+      if (!submitPageBtn.textContent.startsWith(`Submitted ✓ Page ${currentPage}`)) {
         submitPageBtn.disabled = !pageDone;
         submitPageBtn.textContent = `Submit Page ${currentPage}`;
       }
