@@ -1,0 +1,46 @@
+{
+  "Clarity": {
+    "1": "Very Vague",
+    "2": "Somewhat Vague",
+    "3": "Average",
+    "4": "Somewhat Clear",
+    "5": "Very Clear"
+  },
+  "Role Assignment": {
+    "0": "No",
+    "1": "Yes"
+  },
+  "Prompt Structure Order": {
+    "1": "Not Followed",
+    "2": "Partially Followed",
+    "3": "Fully Followed"
+  },
+  "Target Audience": {
+    "1": "None",
+    "2": "Vague",
+    "3": "Mentioned",
+    "4": "Clear",
+    "5": "Detailed"
+  },
+  "Scope Limitation": {
+    "1": "None",
+    "2": "Too Broad",
+    "3": "Moderate",
+    "4": "Well Scoped",
+    "5": "Precisely Scoped"
+  },
+  "Output Format": {
+    "1": "None",
+    "2": "Vague",
+    "3": "Mentioned",
+    "4": "Clear",
+    "5": "Detailed"
+  },
+  "Example / Template": {
+    "1": "None",
+    "2": "Hint Only",
+    "3": "Brief Example",
+    "4": "Clear Example",
+    "5": "Full Template"
+  }
+}
