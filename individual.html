@@ -417,6 +417,20 @@ const EVALUATOR_COLORS = {
   'Mistral':  { bg: 'rgba(251,191,36,0.7)',  border: '#fbbf24',  light: 'rgba(251,191,36,0.15)', glow: 'rgba(251,191,36,0.2)' },
 };
 
+const SHEET_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTXpHfWvnN9ERy3mkjLZTKQp1415dSFeZAm722PmlRE5sqxiWyoqk3vkJblIINdNtI-bbwx2DJuMzxE/pub?gid=0&single=true&output=csv';
+
+const COLOR_PALETTE = [
+  { bg:'rgba(139,92,246,0.7)', border:'#8b5cf6', light:'rgba(139,92,246,0.15)', glow:'rgba(139,92,246,0.2)' },
+  { bg:'rgba(20,184,166,0.7)', border:'#14b8a6', light:'rgba(20,184,166,0.15)', glow:'rgba(20,184,166,0.2)' },
+  { bg:'rgba(245,158,11,0.7)', border:'#f59e0b', light:'rgba(245,158,11,0.15)', glow:'rgba(245,158,11,0.2)' },
+];
+let _colorIdx = 0;
+function getEvaluatorColor(name) {
+  if (EVALUATOR_COLORS[name]) return EVALUATOR_COLORS[name];
+  EVALUATOR_COLORS[name] = COLOR_PALETTE[_colorIdx++ % COLOR_PALETTE.length];
+  return EVALUATOR_COLORS[name];
+}
+
 const CRITERIA = [
   'Clarity', 'Role Assignment', 'Prompt Structure Order',
   'Target Audience', 'Scope Limitation', 'Output Format', 'Example / Template'
@@ -428,21 +442,101 @@ let promptData = {};
 let currentEvaluator = 'Default';
 let charts = {};
 
+// ── CSV parser ───────────────────────────────────────────
+function parseCsv(text) {
+  const rows = [];
+  let headers = null;
+  let i = 0;
+  const len = text.length;
+
+  function parseField() {
+    if (i < len && text[i] === '"') {
+      i++;
+      let field = '';
+      while (i < len) {
+        if (text[i] === '"') {
+          if (i + 1 < len && text[i + 1] === '"') { field += '"'; i += 2; }
+          else { i++; break; }
+        } else { field += text[i++]; }
+      }
+      return field;
+    } else {
+      let field = '';
+      while (i < len && text[i] !== ',' && text[i] !== '\n' && text[i] !== '\r') {
+        field += text[i++];
+      }
+      return field;
+    }
+  }
+
+  while (i < len) {
+    const row = [];
+    while (true) {
+      row.push(parseField());
+      if (i >= len || text[i] === '\n' || text[i] === '\r') {
+        if (i < len && text[i] === '\r') i++;
+        if (i < len && text[i] === '\n') i++;
+        break;
+      }
+      if (text[i] === ',') i++;
+    }
+    if (row.length === 1 && row[0] === '') continue;
+    if (!headers) { headers = row; }
+    else {
+      const obj = {};
+      headers.forEach((h, j) => { obj[h] = row[j] !== undefined ? row[j] : ''; });
+      rows.push(obj);
+    }
+  }
+  return rows;
+}
+
 // ── Load data ────────────────────────────────────────────
 async function loadData() {
-  const files = {
-    'Default':  'data/evaluation_results_page1.json',
-    'Aizawa':   'data/evaluation_results_page1_aizawa.json',
-    'Shimada':  'data/evaluation_results_page1_Shimada.json',
-    'Mistral':  'data/evaluation_results_page1_from_mistral.json',
-  };
-  for (const [name, path] of Object.entries(files)) {
-    const res = await fetch(path);
-    allData[name] = await res.json();
-  }
-  const dataRes = await fetch('data.json');
-  const dataAll = await dataRes.json();
-  dataAll.forEach(d => { promptData[d.id] = d.prompt; });
+  const res = await fetch(SHEET_CSV_URL);
+  if (!res.ok) throw new Error('Failed to fetch CSV: ' + res.status);
+  const records = parseCsv(await res.text());
+
+  // Latest-wins dedup per (evaluator_name, prompt_id)
+  const latestMap = {};
+  records.forEach(row => {
+    latestMap[row['evaluator_name'] + '|' + row['prompt_id']] = row;
+  });
+
+  // Group by evaluator_name, build allData
+  allData = {};
+  Object.values(latestMap).forEach(row => {
+    const name = row['evaluator_name'];
+    if (!allData[name]) allData[name] = {};
+    const id = parseInt(row['prompt_id'], 10);
+    allData[name][id] = {
+      id,
+      evaluations: {
+        'Clarity':                parseInt(row['Clarity'], 10),
+        'Role Assignment':        parseInt(row['Role Assignment'], 10),
+        'Prompt Structure Order': parseInt(row['Prompt Structure Order'], 10),
+        'Target Audience':        parseInt(row['Target Audience'], 10),
+        'Scope Limitation':       parseInt(row['Scope Limitation'], 10),
+        'Output Format':          parseInt(row['Output Format'], 10),
+        'Example / Template':     parseInt(row['Example / Template'], 10),
+      },
+    };
+  });
+
+  // Convert keyed objects to sorted arrays
+  const allIds = [...new Set(Object.values(allData).flatMap(d => Object.keys(d).map(Number)))].sort((a, b) => a - b);
+  Object.keys(allData).forEach(name => {
+    allData[name] = allIds.filter(id => allData[name][id]).map(id => allData[name][id]);
+  });
+
+  // Set currentEvaluator to first available
+  currentEvaluator = Object.keys(allData)[0] || currentEvaluator;
+
+  // Fetch prompt text (source of truth for prompt content)
+  try {
+    const dataRes = await fetch('data.json');
+    if (dataRes.ok) (await dataRes.json()).forEach(d => { promptData[d.id] = d.prompt; });
+  } catch(_) {}
 }
 
 // ── Helpers ──────────────────────────────────────────────
@@ -468,7 +562,7 @@ function destroyCharts() {
 function renderSelector() {
   const container = document.getElementById('evaluatorSelector');
   container.innerHTML = Object.keys(allData).map(name => {
-    const c = EVALUATOR_COLORS[name];
+    const c = getEvaluatorColor(name);
     const isActive = name === currentEvaluator;
     return `<button
       class="${isActive ? 'active' : ''}"
@@ -518,7 +612,7 @@ function renderSummary() {
     { label: 'Worst Criterion', value: worstCrit.avg.toFixed(2), sub: worstCrit.name },
   ];
 
-  const color = EVALUATOR_COLORS[currentEvaluator].border;
+  const color = getEvaluatorColor(currentEvaluator).border;
   container.innerHTML = cards.map(c => `
     <div class="card card-sm">
       <div class="label">${c.label}</div>
@@ -531,7 +625,7 @@ function renderSummary() {
 // ── Radar Chart ──────────────────────────────────────────
 function renderRadar() {
   const data = allData[currentEvaluator];
-  const c = EVALUATOR_COLORS[currentEvaluator];
+  const c = getEvaluatorColor(currentEvaluator);
 
   charts.radar = new Chart(document.getElementById('radarChart'), {
     type: 'radar',
@@ -569,7 +663,7 @@ function renderRadar() {
 // ── Criteria Bar Chart ───────────────────────────────────
 function renderCriteriaBar() {
   const data = allData[currentEvaluator];
-  const c = EVALUATOR_COLORS[currentEvaluator];
+  const c = getEvaluatorColor(currentEvaluator);
   const vals = CRITERIA.map(cr => +criteriaAvg(data, cr).toFixed(2));
 
   charts.criteriaBar = new Chart(document.getElementById('criteriaBarChart'), {
@@ -600,7 +694,7 @@ function renderCriteriaBar() {
 // ── Prompt Total Bar Chart ───────────────────────────────
 function renderPromptBar() {
   const data = allData[currentEvaluator];
-  const c = EVALUATOR_COLORS[currentEvaluator];
+  const c = getEvaluatorColor(currentEvaluator);
 
   charts.promptBar = new Chart(document.getElementById('promptBarChart'), {
     type: 'bar',
@@ -636,7 +730,7 @@ function renderPromptBar() {
 // ── Distribution Chart ───────────────────────────────────
 function renderDistribution() {
   const data = allData[currentEvaluator];
-  const c = EVALUATOR_COLORS[currentEvaluator];
+  const c = getEvaluatorColor(currentEvaluator);
   const counts = [0, 0, 0, 0, 0, 0];
   data.forEach(d => {
     Object.values(d.evaluations).forEach(v => counts[v]++);
@@ -704,7 +798,7 @@ function renderHeatmap() {
 function renderRanking() {
   const container = document.getElementById('rankingTable');
   const data = allData[currentEvaluator];
-  const c = EVALUATOR_COLORS[currentEvaluator];
+  const c = getEvaluatorColor(currentEvaluator);
   const maxPossible = CRITERIA.length * 5;
 
   const ranked = data.map((d, i) => ({
@@ -745,7 +839,7 @@ function renderRanking() {
 function renderPerPrompt() {
   const grid = document.getElementById('promptGrid');
   const data = allData[currentEvaluator];
-  const c = EVALUATOR_COLORS[currentEvaluator];
+  const c = getEvaluatorColor(currentEvaluator);
   const maxPossible = CRITERIA.length * 5;
 
   // Destroy old prompt charts

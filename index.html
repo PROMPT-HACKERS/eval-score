@@ -319,6 +319,15 @@
       background: #2980b9;
     }
 
+    .btn-submit {
+      background: #f59e0b;
+      color: #fff;
+    }
+
+    .btn-submit:hover:not(:disabled) {
+      background: #d97706;
+    }
+
     .confirmed-badge {
       display: inline-block;
       font-size: 12px;
@@ -639,6 +648,8 @@
     <h1>Prompt Evaluation Tool</h1>
     <div class="header-right">
       <a href="analyze.html" class="btn-dashboard">Dashboard</a>
+      <input type="text" id="evaluator-name" placeholder="Your name"
+        style="font-size:13px;padding:4px 8px;border-radius:6px;border:none;width:110px;" />
       <select id="data-file-select">
         <option value="data.json">data.json</option>
         <option value="data_2026-02-28_Japanse.json">Japanese (2026-02-28)</option>
@@ -661,13 +672,14 @@
         <button class="btn-nav" id="btn-next" disabled>Next &#9654;</button>
       </div>
       <div class="action-buttons">
-        <button class="btn-download" id="btn-download-page" disabled>Download Page</button>
+        <button class="btn-submit" id="btn-submit-page" disabled>Submit Page</button>
       </div>
     </div>
   </footer>
 
   <script>
     const ITEMS_PER_PAGE = 10;
+    const GAS_URL = 'https://script.google.com/macros/s/AKfycbws79rcCCVu3_To1fBV4ClYf54B6F7cTVKY7XHTR3r7l1MOCip5CupUXOszlN-gLC5_Zw/exec';
 
     let data = [];
     let config = null;
@@ -890,11 +902,11 @@
     function updateButtons() {
       const prevBtn = document.getElementById("btn-prev");
       const nextBtn = document.getElementById("btn-next");
-      const downloadPageBtn = document.getElementById("btn-download-page");
+      const submitPageBtn = document.getElementById("btn-submit-page");
 
       if (currentPage === null) {
-        downloadPageBtn.disabled = true;
-        downloadPageBtn.textContent = "Download Page";
+        submitPageBtn.disabled = true;
+        submitPageBtn.textContent = "Submit Page";
         return;
       }
 
@@ -915,8 +927,10 @@
       }
 
       const pageDone = pageData.every((d) => results[d.id] !== undefined);
-      downloadPageBtn.disabled = !pageDone;
-      downloadPageBtn.textContent = `Download Page ${currentPage}`;
+      if (!submitPageBtn.textContent.startsWith('Submitted')) {
+        submitPageBtn.disabled = !pageDone;
+        submitPageBtn.textContent = `Submit Page ${currentPage}`;
+      }
     }
 
     function allCriteriaSelected() {
@@ -1008,9 +1022,37 @@
       downloadJson(output, `evaluation_results_page${page}.json`);
     }
 
-    document.getElementById("btn-download-page").addEventListener("click", () => {
+    async function submitPageResults(page) {
+      const evaluatorName = document.getElementById('evaluator-name').value.trim();
+      if (!evaluatorName) { alert('Please enter your name before submitting.'); return; }
+      const dataset = document.getElementById('data-file-select').value;
+      const pageData = getPageData(page);
+      const submissions = pageData.map(d => ({
+        id: d.id,
+        evaluations: toNumericEvaluations(results[d.id].evaluations),
+      }));
+      const btn = document.getElementById('btn-submit-page');
+      btn.disabled = true;
+      btn.textContent = 'Submitting...';
+      try {
+        const res = await fetch(GAS_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain' },
+          body: JSON.stringify({ evaluator_name: evaluatorName, dataset, submissions }),
+        });
+        const json = await res.json();
+        if (json.status !== 'ok') throw new Error(json.message || 'Server error');
+        btn.textContent = `Submitted ✓ Page ${page}`;
+      } catch(err) {
+        alert('Submission failed: ' + err.message);
+        btn.disabled = false;
+        btn.textContent = `Submit Page ${page}`;
+      }
+    }
+
+    document.getElementById("btn-submit-page").addEventListener("click", () => {
       if (currentPage === null) return;
-      downloadPageResults(currentPage);
+      submitPageResults(currentPage);
     });
 
     window.addEventListener("hashchange", () => {
