@@ -1,0 +1,849 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Individual Evaluator Dashboard</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+      background: #0f172a;
+      color: #e2e8f0;
+      min-height: 100vh;
+    }
+    header {
+      background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+      border-bottom: 1px solid #334155;
+      padding: 24px 40px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    header .title-area h1 {
+      font-size: 1.8rem;
+      font-weight: 700;
+      color: #f8fafc;
+    }
+    header .title-area p {
+      color: #94a3b8;
+      margin-top: 4px;
+      font-size: 0.95rem;
+    }
+    header .nav-link {
+      padding: 8px 20px;
+      border: 1px solid #475569;
+      border-radius: 8px;
+      background: transparent;
+      color: #94a3b8;
+      cursor: pointer;
+      font-size: 0.85rem;
+      font-weight: 500;
+      text-decoration: none;
+      transition: all 0.2s;
+    }
+    header .nav-link:hover {
+      border-color: #64748b;
+      color: #e2e8f0;
+    }
+
+    .dashboard {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 32px 24px;
+    }
+
+    /* Evaluator selector tabs */
+    .evaluator-selector {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 32px;
+      flex-wrap: wrap;
+    }
+    .evaluator-selector button {
+      padding: 12px 28px;
+      border: 2px solid #475569;
+      border-radius: 12px;
+      background: transparent;
+      color: #94a3b8;
+      cursor: pointer;
+      font-size: 1rem;
+      font-weight: 600;
+      transition: all 0.25s;
+    }
+    .evaluator-selector button.active {
+      border-color: var(--active-color, #3b82f6);
+      background: var(--active-bg, rgba(59,130,246,0.15));
+      color: #fff;
+      box-shadow: 0 0 16px var(--active-glow, rgba(59,130,246,0.2));
+    }
+    .evaluator-selector button:hover:not(.active) {
+      border-color: #64748b;
+      color: #e2e8f0;
+    }
+
+    /* Summary cards */
+    .summary-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 16px;
+      margin-bottom: 32px;
+    }
+    .card {
+      background: #1e293b;
+      border: 1px solid #334155;
+      border-radius: 12px;
+      padding: 20px;
+    }
+    .card-sm { text-align: center; }
+    .card-sm .label {
+      font-size: 0.8rem;
+      color: #94a3b8;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .card-sm .value {
+      font-size: 2rem;
+      font-weight: 700;
+      margin-top: 4px;
+    }
+    .card-sm .sub {
+      font-size: 0.8rem;
+      color: #64748b;
+      margin-top: 2px;
+    }
+
+    /* Chart grid */
+    .chart-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+      margin-bottom: 32px;
+    }
+    .chart-grid .card { padding: 24px; }
+    .card h2 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin-bottom: 16px;
+      color: #f1f5f9;
+    }
+    .chart-container {
+      position: relative;
+      width: 100%;
+    }
+    .chart-container canvas { width: 100% !important; }
+
+    /* Full-width */
+    .full-width { margin-bottom: 32px; }
+    .full-width .card { padding: 24px; }
+
+    /* Heatmap table */
+    .heatmap-wrapper { overflow-x: auto; }
+    .heatmap {
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 3px;
+      font-size: 0.85rem;
+    }
+    .heatmap th {
+      padding: 8px 12px;
+      text-align: center;
+      color: #94a3b8;
+      font-weight: 600;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+    .heatmap th.row-header { text-align: left; min-width: 100px; }
+    .heatmap td {
+      padding: 10px 8px;
+      text-align: center;
+      border-radius: 6px;
+      font-weight: 600;
+      font-size: 0.9rem;
+      transition: transform 0.15s;
+    }
+    .heatmap td:hover { transform: scale(1.1); z-index: 1; }
+    .heatmap td.row-label {
+      text-align: left;
+      background: transparent !important;
+      color: #cbd5e1;
+      font-weight: 500;
+    }
+
+    /* Per-prompt section */
+    .section-title {
+      font-size: 1.4rem;
+      font-weight: 700;
+      color: #f1f5f9;
+      margin-bottom: 8px;
+      margin-top: 16px;
+    }
+    .section-desc {
+      font-size: 0.9rem;
+      color: #94a3b8;
+      margin-bottom: 20px;
+    }
+    .prompt-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+      gap: 20px;
+      margin-bottom: 32px;
+    }
+    .prompt-card {
+      background: #1e293b;
+      border: 1px solid #334155;
+      border-radius: 12px;
+      padding: 20px;
+    }
+    .prompt-card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+    .prompt-card-header h3 {
+      font-size: 1rem;
+      font-weight: 600;
+      color: #f1f5f9;
+    }
+    .prompt-card-header .total-badge {
+      font-size: 0.85rem;
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-weight: 700;
+    }
+    .prompt-text {
+      font-size: 0.8rem;
+      color: #94a3b8;
+      background: #0f172a;
+      border: 1px solid #334155;
+      border-radius: 6px;
+      padding: 10px 12px;
+      margin-bottom: 12px;
+      white-space: pre-wrap;
+      line-height: 1.5;
+      max-height: 120px;
+      overflow-y: auto;
+    }
+    .prompt-card .chart-container { height: 260px; }
+    .prompt-card .chart-container canvas { height: 100% !important; }
+    .prompt-card .score-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.8rem;
+      margin-top: 12px;
+    }
+    .prompt-card .score-table th {
+      padding: 6px 8px;
+      text-align: center;
+      color: #64748b;
+      font-weight: 600;
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      border-bottom: 1px solid #334155;
+    }
+    .prompt-card .score-table th:first-child { text-align: left; }
+    .prompt-card .score-table td {
+      padding: 5px 8px;
+      text-align: center;
+      color: #cbd5e1;
+    }
+    .prompt-card .score-table td:first-child {
+      text-align: left;
+      color: #94a3b8;
+      font-weight: 500;
+    }
+    .prompt-card .score-table tr:last-child td {
+      border-top: 1px solid #334155;
+      font-weight: 600;
+    }
+
+    /* Ranking table */
+    .ranking-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.85rem;
+    }
+    .ranking-table th {
+      padding: 10px 12px;
+      text-align: center;
+      color: #94a3b8;
+      border-bottom: 1px solid #334155;
+      font-weight: 600;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+    }
+    .ranking-table th:first-child { text-align: left; }
+    .ranking-table td {
+      padding: 10px 12px;
+      text-align: center;
+      border-bottom: 1px solid #1e293b;
+    }
+    .ranking-table td:first-child {
+      text-align: left;
+      color: #cbd5e1;
+      font-weight: 500;
+    }
+    .ranking-table tr:hover { background: rgba(59, 130, 246, 0.05); }
+    .rank-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      font-weight: 700;
+      font-size: 0.8rem;
+    }
+    .rank-1 { background: rgba(251,191,36,0.2); color: #fbbf24; }
+    .rank-2 { background: rgba(148,163,184,0.2); color: #94a3b8; }
+    .rank-3 { background: rgba(180,83,9,0.2); color: #d97706; }
+    .rank-other { background: rgba(71,85,105,0.15); color: #64748b; }
+
+    .score-bar-container {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .score-bar {
+      height: 8px;
+      border-radius: 4px;
+      transition: width 0.3s;
+    }
+    .score-bar-bg {
+      height: 8px;
+      border-radius: 4px;
+      background: #1e293b;
+      flex: 1;
+      position: relative;
+    }
+    .score-bar-fill {
+      height: 100%;
+      border-radius: 4px;
+      position: absolute;
+      top: 0;
+      left: 0;
+    }
+
+    /* Responsive */
+    @media (max-width: 900px) {
+      .chart-grid { grid-template-columns: 1fr; }
+      .prompt-grid { grid-template-columns: 1fr; }
+      header { padding: 20px; flex-direction: column; gap: 12px; }
+      .dashboard { padding: 20px 16px; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="title-area">
+    <h1>Individual Evaluator Dashboard</h1>
+    <p id="headerDesc">Loading...</p>
+  </div>
+  <a class="nav-link" href="analyze.html">Comparison Dashboard</a>
+</header>
+
+<div class="dashboard">
+
+  <!-- Evaluator Selector -->
+  <div class="evaluator-selector" id="evaluatorSelector"></div>
+
+  <!-- Summary Cards -->
+  <div class="summary-row" id="summaryCards"></div>
+
+  <!-- Chart Grid -->
+  <div class="chart-grid">
+    <div class="card">
+      <h2 id="radarTitle">Criteria Radar</h2>
+      <div class="chart-container">
+        <canvas id="radarChart"></canvas>
+      </div>
+    </div>
+    <div class="card">
+      <h2 id="barTitle">Score per Criterion</h2>
+      <div class="chart-container">
+        <canvas id="criteriaBarChart"></canvas>
+      </div>
+    </div>
+    <div class="card">
+      <h2>Total Score per Prompt</h2>
+      <div class="chart-container">
+        <canvas id="promptBarChart"></canvas>
+      </div>
+    </div>
+    <div class="card">
+      <h2>Score Distribution</h2>
+      <div class="chart-container">
+        <canvas id="distributionChart"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <!-- Score Heatmap -->
+  <div class="full-width">
+    <div class="card">
+      <h2 id="heatmapTitle">Score Heatmap</h2>
+      <div class="heatmap-wrapper">
+        <table class="heatmap" id="heatmapTable"></table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Prompt Ranking -->
+  <div class="full-width">
+    <div class="card">
+      <h2>Prompt Ranking (by Total Score)</h2>
+      <div id="rankingTable"></div>
+    </div>
+  </div>
+
+  <!-- Per-Prompt Detail -->
+  <div class="full-width">
+    <h2 class="section-title" id="promptDetailTitle">Per-Prompt Detail</h2>
+    <p class="section-desc" id="promptDetailDesc">Scores for each prompt</p>
+    <div class="prompt-grid" id="promptGrid"></div>
+  </div>
+
+</div>
+
+<script>
+const EVALUATOR_COLORS = {
+  'Default':  { bg: 'rgba(59,130,246,0.7)',  border: '#3b82f6',  light: 'rgba(59,130,246,0.15)', glow: 'rgba(59,130,246,0.2)' },
+  'Aizawa':   { bg: 'rgba(16,185,129,0.7)',  border: '#10b981',  light: 'rgba(16,185,129,0.15)', glow: 'rgba(16,185,129,0.2)' },
+  'Shimada':  { bg: 'rgba(244,114,182,0.7)', border: '#f472b6',  light: 'rgba(244,114,182,0.15)', glow: 'rgba(244,114,182,0.2)' },
+  'Mistral':  { bg: 'rgba(251,191,36,0.7)',  border: '#fbbf24',  light: 'rgba(251,191,36,0.15)', glow: 'rgba(251,191,36,0.2)' },
+};
+
+const CRITERIA = [
+  'Clarity', 'Role Assignment', 'Prompt Structure Order',
+  'Target Audience', 'Scope Limitation', 'Output Format', 'Example / Template'
+];
+const CRITERIA_SHORT = ['Clarity', 'Role', 'Structure', 'Audience', 'Scope', 'Format', 'Example'];
+
+let allData = {};
+let promptData = {};
+let currentEvaluator = 'Default';
+let charts = {};
+
+// ── Load data ────────────────────────────────────────────
+async function loadData() {
+  const files = {
+    'Default':  'data/evaluation_results_page1.json',
+    'Aizawa':   'data/evaluation_results_page1_aizawa.json',
+    'Shimada':  'data/evaluation_results_page1_Shimada.json',
+    'Mistral':  'data/evaluation_results_page1_from_mistral.json',
+  };
+  for (const [name, path] of Object.entries(files)) {
+    const res = await fetch(path);
+    allData[name] = await res.json();
+  }
+  const dataRes = await fetch('data.json');
+  const dataAll = await dataRes.json();
+  dataAll.forEach(d => { promptData[d.id] = d.prompt; });
+}
+
+// ── Helpers ──────────────────────────────────────────────
+function avg(arr) { return arr.length ? arr.reduce((a, b) => a + b, 0) / arr.length : 0; }
+function totalScore(entry) { return Object.values(entry.evaluations).reduce((a, b) => a + b, 0); }
+function criteriaAvg(data, criterion) { return avg(data.map(d => d.evaluations[criterion])); }
+
+function heatColor(val, max = 5) {
+  const ratio = val / max;
+  if (ratio <= 0.2) return 'rgba(239,68,68,0.8)';
+  if (ratio <= 0.4) return 'rgba(249,115,22,0.8)';
+  if (ratio <= 0.6) return 'rgba(234,179,8,0.75)';
+  if (ratio <= 0.8) return 'rgba(34,197,94,0.7)';
+  return 'rgba(16,185,129,0.85)';
+}
+
+function destroyCharts() {
+  Object.values(charts).forEach(c => { if (c && c.destroy) c.destroy(); });
+  charts = {};
+}
+
+// ── Evaluator Selector ───────────────────────────────────
+function renderSelector() {
+  const container = document.getElementById('evaluatorSelector');
+  container.innerHTML = Object.keys(allData).map(name => {
+    const c = EVALUATOR_COLORS[name];
+    const isActive = name === currentEvaluator;
+    return `<button
+      class="${isActive ? 'active' : ''}"
+      style="${isActive ? `--active-color:${c.border};--active-bg:${c.light};--active-glow:${c.glow}` : ''}"
+      onclick="switchEvaluator('${name}')">${name}</button>`;
+  }).join('');
+}
+
+function switchEvaluator(name) {
+  currentEvaluator = name;
+  destroyCharts();
+  renderAll();
+}
+
+// ── Header ───────────────────────────────────────────────
+function renderHeader() {
+  const count = allData[currentEvaluator].length;
+  document.getElementById('headerDesc').textContent =
+    `${currentEvaluator} / ${count} Prompts / ${CRITERIA.length} Criteria`;
+}
+
+// ── Summary Cards ────────────────────────────────────────
+function renderSummary() {
+  const container = document.getElementById('summaryCards');
+  const data = allData[currentEvaluator];
+  const maxPossible = CRITERIA.length * 5;
+
+  const overallAvg = avg(CRITERIA.map(c => criteriaAvg(data, c)));
+  const totalAvg = avg(data.map(d => totalScore(d)));
+  const scores = data.map(d => totalScore(d));
+  const maxScore = Math.max(...scores);
+  const minScore = Math.min(...scores);
+  const bestPrompt = data[scores.indexOf(maxScore)].id;
+  const worstPrompt = data[scores.indexOf(minScore)].id;
+
+  // Best / worst criterion
+  const critAvgs = CRITERIA.map((c, i) => ({ name: CRITERIA_SHORT[i], avg: criteriaAvg(data, c) }));
+  const bestCrit = critAvgs.reduce((a, b) => a.avg > b.avg ? a : b);
+  const worstCrit = critAvgs.reduce((a, b) => a.avg < b.avg ? a : b);
+
+  const cards = [
+    { label: 'Overall Avg', value: overallAvg.toFixed(2), sub: '/ 5.00' },
+    { label: 'Total Avg', value: totalAvg.toFixed(1), sub: `/ ${maxPossible}` },
+    { label: 'Best Prompt', value: `#${bestPrompt}`, sub: `${maxScore} pts` },
+    { label: 'Worst Prompt', value: `#${worstPrompt}`, sub: `${minScore} pts` },
+    { label: 'Best Criterion', value: bestCrit.avg.toFixed(2), sub: bestCrit.name },
+    { label: 'Worst Criterion', value: worstCrit.avg.toFixed(2), sub: worstCrit.name },
+  ];
+
+  const color = EVALUATOR_COLORS[currentEvaluator].border;
+  container.innerHTML = cards.map(c => `
+    <div class="card card-sm">
+      <div class="label">${c.label}</div>
+      <div class="value" style="color:${color}">${c.value}</div>
+      <div class="sub">${c.sub}</div>
+    </div>
+  `).join('');
+}
+
+// ── Radar Chart ──────────────────────────────────────────
+function renderRadar() {
+  const data = allData[currentEvaluator];
+  const c = EVALUATOR_COLORS[currentEvaluator];
+
+  charts.radar = new Chart(document.getElementById('radarChart'), {
+    type: 'radar',
+    data: {
+      labels: CRITERIA_SHORT,
+      datasets: [{
+        label: currentEvaluator,
+        data: CRITERIA.map(cr => criteriaAvg(data, cr)),
+        backgroundColor: c.light,
+        borderColor: c.border,
+        borderWidth: 2,
+        pointBackgroundColor: c.border,
+        pointRadius: 5,
+      }],
+    },
+    options: {
+      scales: {
+        r: {
+          min: 0, max: 5,
+          ticks: { stepSize: 1, color: '#64748b', backdropColor: 'transparent' },
+          grid: { color: '#334155' },
+          pointLabels: { color: '#cbd5e1', font: { size: 12 } },
+          angleLines: { color: '#334155' },
+        }
+      },
+      plugins: {
+        legend: { labels: { color: '#cbd5e1', usePointStyle: true, pointStyle: 'circle' } }
+      },
+      responsive: true,
+      maintainAspectRatio: true,
+    }
+  });
+}
+
+// ── Criteria Bar Chart ───────────────────────────────────
+function renderCriteriaBar() {
+  const data = allData[currentEvaluator];
+  const c = EVALUATOR_COLORS[currentEvaluator];
+  const vals = CRITERIA.map(cr => +criteriaAvg(data, cr).toFixed(2));
+
+  charts.criteriaBar = new Chart(document.getElementById('criteriaBarChart'), {
+    type: 'bar',
+    data: {
+      labels: CRITERIA_SHORT,
+      datasets: [{
+        label: 'Average Score',
+        data: vals,
+        backgroundColor: c.bg,
+        borderColor: c.border,
+        borderWidth: 1,
+        borderRadius: 4,
+      }]
+    },
+    options: {
+      indexAxis: 'y',
+      scales: {
+        x: { min: 0, max: 5, ticks: { color: '#94a3b8' }, grid: { color: '#1e293b' } },
+        y: { ticks: { color: '#94a3b8' }, grid: { color: '#1e293b' } },
+      },
+      plugins: { legend: { display: false } },
+      responsive: true,
+    }
+  });
+}
+
+// ── Prompt Total Bar Chart ───────────────────────────────
+function renderPromptBar() {
+  const data = allData[currentEvaluator];
+  const c = EVALUATOR_COLORS[currentEvaluator];
+
+  charts.promptBar = new Chart(document.getElementById('promptBarChart'), {
+    type: 'bar',
+    data: {
+      labels: data.map(d => `#${d.id}`),
+      datasets: [{
+        label: 'Total Score',
+        data: data.map(d => totalScore(d)),
+        backgroundColor: c.bg,
+        borderColor: c.border,
+        borderWidth: 1,
+        borderRadius: 4,
+      }]
+    },
+    options: {
+      scales: {
+        x: { ticks: { color: '#94a3b8' }, grid: { color: '#1e293b' } },
+        y: { min: 0, max: 35, ticks: { color: '#94a3b8' }, grid: { color: '#1e293b' } },
+      },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            label: ctx => `Total: ${ctx.raw} / ${CRITERIA.length * 5}`
+          }
+        }
+      },
+      responsive: true,
+    }
+  });
+}
+
+// ── Distribution Chart ───────────────────────────────────
+function renderDistribution() {
+  const data = allData[currentEvaluator];
+  const c = EVALUATOR_COLORS[currentEvaluator];
+  const counts = [0, 0, 0, 0, 0, 0];
+  data.forEach(d => {
+    Object.values(d.evaluations).forEach(v => counts[v]++);
+  });
+
+  charts.distribution = new Chart(document.getElementById('distributionChart'), {
+    type: 'bar',
+    data: {
+      labels: ['0', '1', '2', '3', '4', '5'],
+      datasets: [{
+        label: 'Count',
+        data: counts,
+        backgroundColor: c.bg,
+        borderColor: c.border,
+        borderWidth: 1,
+        borderRadius: 4,
+      }]
+    },
+    options: {
+      scales: {
+        x: { title: { display: true, text: 'Score', color: '#94a3b8' }, ticks: { color: '#94a3b8' }, grid: { color: '#1e293b' } },
+        y: { title: { display: true, text: 'Count', color: '#94a3b8' }, ticks: { color: '#94a3b8', stepSize: 1 }, grid: { color: '#1e293b' } },
+      },
+      plugins: { legend: { display: false } },
+      responsive: true,
+    }
+  });
+}
+
+// ── Score Heatmap ────────────────────────────────────────
+function renderHeatmap() {
+  const table = document.getElementById('heatmapTable');
+  const data = allData[currentEvaluator];
+  const ids = data.map(d => d.id);
+
+  let html = '<thead><tr><th class="row-header">Criterion</th>';
+  ids.forEach(id => html += `<th>#${id}</th>`);
+  html += '<th>Avg</th></tr></thead><tbody>';
+
+  CRITERIA.forEach((c, ci) => {
+    html += `<tr><td class="row-label">${CRITERIA_SHORT[ci]}</td>`;
+    const vals = [];
+    ids.forEach((id, i) => {
+      const val = data[i].evaluations[c];
+      vals.push(val);
+      html += `<td style="background:${heatColor(val)};color:#fff">${val}</td>`;
+    });
+    const rowAvg = avg(vals);
+    html += `<td style="background:${heatColor(rowAvg)};color:#fff">${rowAvg.toFixed(1)}</td>`;
+    html += '</tr>';
+  });
+
+  html += '<tr><td class="row-label"><strong>Total</strong></td>';
+  ids.forEach((id, i) => {
+    const total = totalScore(data[i]);
+    html += `<td style="background:${heatColor(total / CRITERIA.length)};color:#fff"><strong>${total}</strong></td>`;
+  });
+  const grandAvg = avg(data.map(d => totalScore(d)));
+  html += `<td style="background:${heatColor(grandAvg / CRITERIA.length)};color:#fff"><strong>${grandAvg.toFixed(1)}</strong></td>`;
+  html += '</tr></tbody>';
+  table.innerHTML = html;
+}
+
+// ── Prompt Ranking ───────────────────────────────────────
+function renderRanking() {
+  const container = document.getElementById('rankingTable');
+  const data = allData[currentEvaluator];
+  const c = EVALUATOR_COLORS[currentEvaluator];
+  const maxPossible = CRITERIA.length * 5;
+
+  const ranked = data.map((d, i) => ({
+    id: d.id,
+    total: totalScore(d),
+    index: i,
+  })).sort((a, b) => b.total - a.total);
+
+  let html = '<table class="ranking-table"><thead><tr>';
+  html += '<th>Rank</th><th>Prompt</th><th>Total</th><th style="text-align:left;min-width:200px">Bar</th>';
+  CRITERIA_SHORT.forEach(cs => html += `<th>${cs}</th>`);
+  html += '</tr></thead><tbody>';
+
+  ranked.forEach((item, rank) => {
+    const rankClass = rank === 0 ? 'rank-1' : rank === 1 ? 'rank-2' : rank === 2 ? 'rank-3' : 'rank-other';
+    const pct = (item.total / maxPossible * 100).toFixed(0);
+    html += `<tr>
+      <td><span class="rank-badge ${rankClass}">${rank + 1}</span></td>
+      <td>#${item.id}</td>
+      <td style="font-weight:700;color:${c.border}">${item.total}</td>
+      <td style="text-align:left">
+        <div class="score-bar-container">
+          <div class="score-bar-bg"><div class="score-bar-fill" style="width:${pct}%;background:${c.bg};border-radius:4px;"></div></div>
+          <span style="font-size:0.75rem;color:#94a3b8;min-width:35px">${pct}%</span>
+        </div>
+      </td>`;
+    CRITERIA.forEach(cr => {
+      const val = allData[currentEvaluator][item.index].evaluations[cr];
+      html += `<td style="color:${heatColor(val).replace('0.8', '1').replace('0.75', '1').replace('0.7', '1').replace('0.85', '1')}">${val}</td>`;
+    });
+    html += '</tr>';
+  });
+  html += '</tbody></table>';
+  container.innerHTML = html;
+}
+
+// ── Per-Prompt Detail ────────────────────────────────────
+function renderPerPrompt() {
+  const grid = document.getElementById('promptGrid');
+  const data = allData[currentEvaluator];
+  const c = EVALUATOR_COLORS[currentEvaluator];
+  const maxPossible = CRITERIA.length * 5;
+
+  // Destroy old prompt charts
+  if (charts.prompts) charts.prompts.forEach(ch => ch.destroy());
+  charts.prompts = [];
+
+  let html = '';
+  data.forEach((d, i) => {
+    const total = totalScore(d);
+    const pct = (total / maxPossible * 100).toFixed(0);
+    const promptText = promptData[d.id] || '';
+    const escaped = promptText.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+
+    html += `
+      <div class="prompt-card">
+        <div class="prompt-card-header">
+          <h3>Prompt #${d.id}</h3>
+          <span class="total-badge" style="color:${c.border};background:${c.light}">
+            ${total} / ${maxPossible} (${pct}%)
+          </span>
+        </div>
+        <div class="prompt-text">${escaped}</div>
+        <div class="chart-container">
+          <canvas id="promptRadar${i}"></canvas>
+        </div>
+        <table class="score-table">
+          <thead><tr><th>Criterion</th><th>Score</th></tr></thead>
+          <tbody>
+            ${CRITERIA.map((cr, ci) => {
+              const val = d.evaluations[cr];
+              return `<tr>
+                <td>${CRITERIA_SHORT[ci]}</td>
+                <td style="font-weight:600;color:${c.border}">${val}</td>
+              </tr>`;
+            }).join('')}
+            <tr>
+              <td>Total</td>
+              <td style="font-weight:700;color:${c.border}">${total}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>`;
+  });
+  grid.innerHTML = html;
+
+  // Create per-prompt radar charts
+  data.forEach((d, i) => {
+    const canvas = document.getElementById(`promptRadar${i}`);
+    const chart = new Chart(canvas, {
+      type: 'radar',
+      data: {
+        labels: CRITERIA_SHORT,
+        datasets: [{
+          label: currentEvaluator,
+          data: CRITERIA.map(cr => d.evaluations[cr]),
+          backgroundColor: c.light,
+          borderColor: c.border,
+          borderWidth: 2,
+          pointBackgroundColor: c.border,
+          pointRadius: 3,
+        }],
+      },
+      options: {
+        scales: {
+          r: {
+            min: 0, max: 5,
+            ticks: { stepSize: 1, color: '#64748b', backdropColor: 'transparent', font: { size: 9 } },
+            grid: { color: '#334155' },
+            pointLabels: { color: '#94a3b8', font: { size: 10 } },
+            angleLines: { color: '#334155' },
+          }
+        },
+        plugins: { legend: { display: false } },
+        responsive: true,
+        maintainAspectRatio: false,
+      }
+    });
+    charts.prompts.push(chart);
+  });
+}
+
+// ── Render All ────────────────────────────────────────────
+function renderAll() {
+  renderSelector();
+  renderHeader();
+  renderSummary();
+  renderRadar();
+  renderCriteriaBar();
+  renderPromptBar();
+  renderDistribution();
+  renderHeatmap();
+  renderRanking();
+  renderPerPrompt();
+}
+
+// ── Init ─────────────────────────────────────────────────
+loadData().then(() => renderAll());
+</script>
+
+</body>
+</html>
