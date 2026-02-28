@@ -1,0 +1,590 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Prompt Evaluation Tool</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: "Helvetica Neue", Arial, "Hiragino Kaku Gothic ProN", "Hiragino Sans", Meiryo, sans-serif;
+      background: #f5f7fa;
+      color: #333;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    header {
+      background: #2c3e50;
+      color: #fff;
+      padding: 16px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    header h1 {
+      font-size: 20px;
+      font-weight: 600;
+    }
+
+    .progress {
+      font-size: 14px;
+      background: rgba(255,255,255,0.15);
+      padding: 6px 14px;
+      border-radius: 20px;
+    }
+
+    main {
+      flex: 1;
+      max-width: 800px;
+      width: 100%;
+      margin: 24px auto;
+      padding: 0 16px;
+    }
+
+    .nav-info {
+      text-align: center;
+      font-size: 14px;
+      color: #666;
+      margin-bottom: 16px;
+    }
+
+    .data-card {
+      background: #fff;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+      padding: 24px;
+      margin-bottom: 20px;
+    }
+
+    .data-card h2 {
+      font-size: 16px;
+      color: #2c3e50;
+      margin-bottom: 16px;
+      padding-bottom: 8px;
+      border-bottom: 2px solid #3498db;
+    }
+
+    .data-field {
+      margin-bottom: 12px;
+    }
+
+    .data-field .label {
+      font-size: 12px;
+      font-weight: 600;
+      color: #7f8c8d;
+      text-transform: uppercase;
+      margin-bottom: 4px;
+    }
+
+    .data-field .value {
+      font-size: 15px;
+      line-height: 1.6;
+      padding: 8px 12px;
+      background: #f8f9fa;
+      border-radius: 4px;
+      border-left: 3px solid #3498db;
+      white-space: pre-wrap;
+    }
+
+    .eval-section {
+      background: #fff;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+      padding: 24px;
+      margin-bottom: 20px;
+    }
+
+    .eval-section h2 {
+      font-size: 16px;
+      color: #2c3e50;
+      margin-bottom: 16px;
+      padding-bottom: 8px;
+      border-bottom: 2px solid #e67e22;
+    }
+
+    .eval-item {
+      margin-bottom: 16px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid #f0f0f0;
+    }
+
+    .eval-item:last-child {
+      margin-bottom: 0;
+      padding-bottom: 0;
+      border-bottom: none;
+    }
+
+    .eval-item .criterion-name {
+      font-size: 14px;
+      font-weight: 600;
+      color: #2c3e50;
+      margin-bottom: 2px;
+    }
+
+    .eval-item .criterion-desc {
+      font-size: 12px;
+      color: #7f8c8d;
+      margin-bottom: 8px;
+    }
+
+    .radio-group {
+      display: flex;
+      gap: 0;
+    }
+
+    .radio-group label {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 8px 4px;
+      border: 1px solid #ddd;
+      margin-left: -1px;
+      cursor: pointer;
+      transition: background 0.15s, border-color 0.15s, color 0.15s;
+      user-select: none;
+      text-align: center;
+      gap: 2px;
+    }
+
+    .radio-group label .opt-label {
+      font-size: 13px;
+    }
+
+    .radio-group label .opt-note {
+      font-size: 10px;
+      opacity: 0.75;
+    }
+
+    .radio-group label:first-child {
+      border-radius: 6px 0 0 6px;
+      margin-left: 0;
+    }
+
+    .radio-group label:last-child {
+      border-radius: 0 6px 6px 0;
+    }
+
+    .radio-group label[data-score="0"] { background: #fdecea; border-color: #f0b4ab; color: #a93226; }
+    .radio-group label[data-score="1"] { background: #fef3e6; border-color: #f5cba7; color: #b35c12; }
+    .radio-group label[data-score="2"] { background: #fef9e7; border-color: #f7dc6f; color: #7d6608; }
+    .radio-group label[data-score="3"] { background: #eafaf1; border-color: #a9dfbf; color: #1e8449; }
+    .radio-group label[data-score="4"] { background: #e8f8f5; border-color: #82e0aa; color: #1a7a3a; }
+
+    .radio-group label:hover:not(.disabled) {
+      z-index: 1;
+      filter: brightness(0.95);
+    }
+
+    .radio-group label.checked {
+      z-index: 2;
+      font-weight: 600;
+      box-shadow: 0 0 0 2px rgba(0,0,0,0.15);
+    }
+
+    .radio-group label.checked[data-score="0"] { background: #e74c3c; border-color: #c0392b; color: #fff; }
+    .radio-group label.checked[data-score="1"] { background: #e67e22; border-color: #d35400; color: #fff; }
+    .radio-group label.checked[data-score="2"] { background: #f1c40f; border-color: #d4ac0d; color: #333; }
+    .radio-group label.checked[data-score="3"] { background: #2ecc71; border-color: #27ae60; color: #fff; }
+    .radio-group label.checked[data-score="4"] { background: #27ae60; border-color: #1e8449; color: #fff; }
+
+    .radio-group label.disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    .radio-group input[type="radio"] {
+      display: none;
+    }
+
+    footer {
+      background: #fff;
+      border-top: 1px solid #e0e0e0;
+      padding: 16px 24px;
+      position: sticky;
+      bottom: 0;
+      z-index: 100;
+    }
+
+    .footer-inner {
+      max-width: 800px;
+      margin: 0 auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .nav-buttons {
+      display: flex;
+      gap: 8px;
+    }
+
+    .action-buttons {
+      display: flex;
+      gap: 8px;
+    }
+
+    button {
+      padding: 10px 20px;
+      border: none;
+      border-radius: 6px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s, opacity 0.2s;
+    }
+
+    button:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+
+    .btn-nav {
+      background: #ecf0f1;
+      color: #2c3e50;
+    }
+
+    .btn-nav:hover:not(:disabled) {
+      background: #d5dbdb;
+    }
+
+    .btn-confirm {
+      background: #27ae60;
+      color: #fff;
+    }
+
+    .btn-confirm:hover:not(:disabled) {
+      background: #219a52;
+    }
+
+    .btn-download {
+      background: #3498db;
+      color: #fff;
+    }
+
+    .btn-download:hover:not(:disabled) {
+      background: #2980b9;
+    }
+
+    .confirmed-badge {
+      display: inline-block;
+      font-size: 12px;
+      background: #27ae60;
+      color: #fff;
+      padding: 2px 8px;
+      border-radius: 10px;
+      margin-left: 8px;
+    }
+
+    .loading {
+      text-align: center;
+      padding: 60px;
+      color: #999;
+      font-size: 16px;
+    }
+
+    .error {
+      text-align: center;
+      padding: 60px;
+      color: #e74c3c;
+      font-size: 16px;
+    }
+
+    @media (max-width: 600px) {
+      header {
+        flex-direction: column;
+        gap: 8px;
+        text-align: center;
+        padding: 12px 16px;
+      }
+
+      main {
+        margin: 16px auto;
+      }
+
+      .data-card, .eval-section {
+        padding: 16px;
+      }
+
+      .radio-group label {
+        padding: 12px 2px;
+        min-height: 44px;
+      }
+
+      .radio-group label .opt-label {
+        font-size: 11px;
+      }
+
+      .radio-group label .opt-note {
+        font-size: 9px;
+      }
+
+      .footer-inner {
+        flex-direction: column;
+        gap: 8px;
+      }
+
+      .nav-buttons, .action-buttons {
+        width: 100%;
+      }
+
+      .nav-buttons {
+        order: 2;
+      }
+
+      .action-buttons {
+        order: 1;
+      }
+
+      .nav-buttons button, .action-buttons button {
+        flex: 1;
+        min-height: 44px;
+      }
+
+      button {
+        padding: 12px 16px;
+        font-size: 14px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Prompt Evaluation Tool</h1>
+    <div class="progress" id="progress">Loading...</div>
+  </header>
+
+  <main id="main">
+    <div class="loading">Loading data...</div>
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+      <div class="nav-buttons">
+        <button class="btn-nav" id="btn-prev" disabled>&#9664; Prev</button>
+        <button class="btn-nav" id="btn-next" disabled>Next &#9654;</button>
+      </div>
+      <div class="action-buttons">
+        <button class="btn-download" id="btn-download" disabled>Download Results</button>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    let data = [];
+    let config = null;
+    let currentIndex = 0;
+    let results = {};
+
+    async function init() {
+      try {
+        const [dataRes, configRes] = await Promise.all([
+          fetch("data.json"),
+          fetch("config.json"),
+        ]);
+
+        if (!dataRes.ok || !configRes.ok) {
+          throw new Error("データの読み込みに失敗しました");
+        }
+
+        data = await dataRes.json();
+        config = await configRes.json();
+
+        render();
+      } catch (e) {
+        document.getElementById("main").innerHTML =
+          '<div class="error">Failed to load data.<br>Please start a local server with: npx serve .</div>';
+        document.getElementById("progress").textContent = "Error";
+      }
+    }
+
+    function saveCurrentEvaluations() {
+      const item = data[currentIndex];
+      results[item.id] = {
+        id: item.id,
+        evaluations: getEvaluations(),
+      };
+    }
+
+    function render() {
+      const item = data[currentIndex];
+      const confirmedCount = Object.keys(results).length;
+      const isLast = currentIndex === data.length - 1;
+      const isConfirmed = results[item.id] !== undefined;
+      const savedEvals = results[item.id]?.evaluations || {};
+
+      document.getElementById("progress").textContent =
+        `Evaluated: ${confirmedCount} / ${data.length}`;
+
+      const promptHtml = `
+        <div class="data-field">
+          <div class="label">prompt</div>
+          <div class="value">${escapeHtml(item.prompt)}</div>
+        </div>`;
+
+      const evalItems = config.criteria
+        .map((c, ci) => {
+          const savedValue = savedEvals[c.name] || "";
+          const radios = c.options
+            .map(
+              (opt, oi) => {
+                const val = typeof opt === "string" ? opt : opt.value;
+                const note = typeof opt === "string" ? "" : opt.note || "";
+                const id = `c${ci}_o${oi}`;
+                const checked = val === savedValue ? "checked" : "";
+                const disabled = isConfirmed ? "disabled" : "";
+                const checkedClass = val === savedValue ? "checked" : "";
+                const disabledClass = isConfirmed ? "disabled" : "";
+                const noteHtml = note ? `<span class="opt-note">${escapeHtml(note)}</span>` : "";
+                return `<label class="${checkedClass} ${disabledClass}" for="${id}" data-score="${oi}">
+                  <input type="radio" id="${id}" name="criterion_${ci}" value="${escapeHtml(val)}" ${checked} ${disabled}>
+                  <span class="opt-label">${escapeHtml(val)}</span>
+                  ${noteHtml}
+                </label>`;
+              }
+            )
+            .join("");
+
+          const desc = c.description ? `<div class="criterion-desc">${escapeHtml(c.description)}</div>` : "";
+          return `
+          <div class="eval-item" data-criterion="${escapeHtml(c.name)}">
+            <div class="criterion-name">${escapeHtml(c.name)}</div>
+            ${desc}
+            <div class="radio-group">${radios}</div>
+          </div>`;
+        })
+        .join("");
+
+      document.getElementById("main").innerHTML = `
+        <div class="nav-info">
+          Item ${currentIndex + 1} / ${data.length} (ID: ${item.id})
+          ${isConfirmed ? '<span class="confirmed-badge">Saved</span>' : ""}
+        </div>
+        <div class="data-card">
+          <h2>Prompt</h2>
+          ${promptHtml}
+        </div>
+        <div class="eval-section">
+          <h2>Evaluation</h2>
+          ${evalItems}
+        </div>
+      `;
+
+      document.querySelectorAll('.radio-group input[type="radio"]').forEach((radio) => {
+        radio.addEventListener("change", () => {
+          radio.closest(".radio-group").querySelectorAll("label").forEach((lbl) => {
+            lbl.classList.toggle("checked", lbl.querySelector("input").checked);
+          });
+          updateButtons();
+        });
+      });
+
+      // Update next button label for last page
+      const nextBtn = document.getElementById("btn-next");
+      nextBtn.textContent = isLast && !isConfirmed ? "Finish" : "Next \u25B6";
+
+      updateButtons();
+    }
+
+    function updateButtons() {
+      const prevBtn = document.getElementById("btn-prev");
+      const nextBtn = document.getElementById("btn-next");
+      const downloadBtn = document.getElementById("btn-download");
+
+      const item = data[currentIndex];
+      const isConfirmed = results[item.id] !== undefined;
+      const allSelected = allCriteriaSelected();
+      const isLast = currentIndex === data.length - 1;
+
+      prevBtn.disabled = currentIndex === 0;
+
+      // "次へ" is disabled if: current page is not yet confirmed AND not all criteria are selected
+      // On last page when already confirmed, disable (nowhere to go)
+      if (isConfirmed && isLast) {
+        nextBtn.disabled = true;
+      } else if (isConfirmed) {
+        nextBtn.disabled = false;
+      } else {
+        nextBtn.disabled = !allSelected;
+      }
+
+      const allDone = data.every((d) => results[d.id] !== undefined);
+      downloadBtn.disabled = !allDone;
+    }
+
+    function allCriteriaSelected() {
+      const groups = document.querySelectorAll(".eval-item");
+      if (groups.length === 0) return false;
+      return Array.from(groups).every((g) =>
+        g.querySelector('input[type="radio"]:checked')
+      );
+    }
+
+    function getEvaluations() {
+      const evals = {};
+      document.querySelectorAll(".eval-item").forEach((g) => {
+        const name = g.getAttribute("data-criterion");
+        const checked = g.querySelector('input[type="radio"]:checked');
+        evals[name] = checked ? checked.value : "";
+      });
+      return evals;
+    }
+
+    function escapeHtml(str) {
+      const div = document.createElement("div");
+      div.textContent = str;
+      return div.innerHTML;
+    }
+
+    document.getElementById("btn-prev").addEventListener("click", () => {
+      if (currentIndex > 0) {
+        currentIndex--;
+        render();
+      }
+    });
+
+    document.getElementById("btn-next").addEventListener("click", () => {
+      const item = data[currentIndex];
+      const isConfirmed = results[item.id] !== undefined;
+
+      // Save if not yet confirmed
+      if (!isConfirmed) {
+        if (!allCriteriaSelected()) return;
+        saveCurrentEvaluations();
+      }
+
+      // Advance to next page if not last
+      if (currentIndex < data.length - 1) {
+        currentIndex++;
+      }
+
+      render();
+    });
+
+    document.getElementById("btn-download").addEventListener("click", () => {
+      const output = data.map((d) => results[d.id]);
+      const blob = new Blob([JSON.stringify(output, null, 2)], {
+        type: "application/json",
+      });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "evaluation_results.json";
+      a.click();
+      URL.revokeObjectURL(url);
+    });
+
+    init();
+  </script>
+</body>
+</html>

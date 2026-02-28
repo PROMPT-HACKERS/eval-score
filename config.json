@@ -1,0 +1,48 @@
+{
+  "criteria": [
+    {
+      "name": "Clarity",
+      "description": "明瞭性 - 指示が明確で分かりやすいか",
+      "options": [
+        { "value": "1: Very Vague", "note": "非常に曖昧" },
+        { "value": "2: Somewhat Vague", "note": "やや曖昧" },
+        { "value": "3: Average", "note": "普通" },
+        { "value": "4: Somewhat Clear", "note": "やや明瞭" },
+        { "value": "5: Very Clear", "note": "非常に明瞭" }
+      ]
+    },
+    {
+      "name": "Role Assignment",
+      "description": "役割付与 - ペルソナや専門性が適切に設定されているか",
+      "options": [
+        { "value": "1: None", "note": "なし" },
+        { "value": "2: Insufficient", "note": "不十分" },
+        { "value": "3: Average", "note": "普通" },
+        { "value": "4: Appropriate", "note": "適切" },
+        { "value": "5: Excellent", "note": "非常に適切" }
+      ]
+    },
+    {
+      "name": "Constraints / Conditions",
+      "description": "制約・条件の指定 - 文字数・対象者などの条件が設定されているか",
+      "options": [
+        { "value": "1: None", "note": "なし" },
+        { "value": "2: Insufficient", "note": "不十分" },
+        { "value": "3: Average", "note": "普通" },
+        { "value": "4: Appropriate", "note": "適切" },
+        { "value": "5: Excellent", "note": "非常に適切" }
+      ]
+    },
+    {
+      "name": "Output Format Specification",
+      "description": "出力形式の指定 - 箇条書き・表などのフォーマットが指定されているか",
+      "options": [
+        { "value": "1: None", "note": "なし" },
+        { "value": "2: Insufficient", "note": "不十分" },
+        { "value": "3: Average", "note": "普通" },
+        { "value": "4: Appropriate", "note": "適切" },
+        { "value": "5: Excellent", "note": "非常に適切" }
+      ]
+    }
+  ]
+}

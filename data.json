@@ -1,0 +1,22 @@
+[
+  {
+    "id": 1,
+    "prompt": "Tell me the capital of Japan."
+  },
+  {
+    "id": 2,
+    "prompt": "You are a chemistry expert. Please answer the following question accurately and concisely.\n\nQuestion: What is the chemical formula of water?"
+  },
+  {
+    "id": 3,
+    "prompt": "Act as an astronomer. Explain the distance from the Earth to the Sun in a way that a middle school student can understand. Keep your answer under 200 words."
+  },
+  {
+    "id": 4,
+    "prompt": "Tell me about Python"
+  },
+  {
+    "id": 5,
+    "prompt": "You are a biology teacher. Follow the conditions below.\n\nConditions:\n- Audience: High school students\n- Format: Bullet points\n- Length: Under 300 words\n\nQuestion: Explain the process of photosynthesis."
+  }
+]
