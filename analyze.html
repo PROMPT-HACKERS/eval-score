@@ -306,6 +306,20 @@
       margin-right: 4px;
       vertical-align: middle;
     }
+    .prompt-text {
+      font-size: 0.8rem;
+      color: #94a3b8;
+      background: #0f172a;
+      border: 1px solid #334155;
+      border-radius: 6px;
+      padding: 10px 12px;
+      margin-bottom: 12px;
+      white-space: pre-wrap;
+      line-height: 1.5;
+      max-height: 120px;
+      overflow-y: auto;
+    }
+
     .prompt-card .chart-container {
       height: 260px;
     }
@@ -452,6 +466,7 @@ const CRITERIA_SHORT = [
 ];
 
 let allData = {};
+let promptData = {};
 const HUMAN_EVALUATORS = ['Default', 'Aizawa', 'Shimada'];
 
 // ── Load data ────────────────────────────────────────────
@@ -466,6 +481,9 @@ async function loadData() {
     const res = await fetch(path);
     allData[name] = await res.json();
   }
+  const dataRes = await fetch('data.json');
+  const dataAll = await dataRes.json();
+  dataAll.forEach(d => { promptData[d.id] = d.prompt; });
 }
 
 // ── Helpers ──────────────────────────────────────────────
@@ -872,6 +890,9 @@ function renderPerPrompt() {
     const diff = mTotal - hTotal;
     const diffSign = diff > 0 ? '+' : '';
 
+    const promptText = promptData[id] || '';
+    const escapedPrompt = promptText.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+
     html += `
       <div class="prompt-card">
         <div class="prompt-card-header">
@@ -880,6 +901,7 @@ function renderPerPrompt() {
             Diff ${diffSign}${diff.toFixed(1)}
           </span>
         </div>
+        <div class="prompt-text">${escapedPrompt}</div>
         <div class="chart-container">
           <canvas id="promptChart${i}"></canvas>
         </div>
