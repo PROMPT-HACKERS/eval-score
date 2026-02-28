@@ -180,6 +180,9 @@
     .radio-group label[data-score="3"] { background: #eafaf1; border-color: #a9dfbf; color: #1e8449; }
     .radio-group label[data-score="4"] { background: #e8f8f5; border-color: #82e0aa; color: #1a7a3a; }
 
+    .radio-group.boolean-group label[data-score="0"] { background: #fdecea; border-color: #f0b4ab; color: #a93226; }
+    .radio-group.boolean-group label[data-score="1"] { background: #eafaf1; border-color: #a9dfbf; color: #1e8449; }
+
     .radio-group label:hover:not(.disabled) {
       z-index: 1;
       filter: brightness(0.95);
@@ -196,6 +199,9 @@
     .radio-group label.checked[data-score="2"] { background: #f1c40f; border-color: #d4ac0d; color: #333; }
     .radio-group label.checked[data-score="3"] { background: #2ecc71; border-color: #27ae60; color: #fff; }
     .radio-group label.checked[data-score="4"] { background: #27ae60; border-color: #1e8449; color: #fff; }
+
+    .radio-group.boolean-group label.checked[data-score="0"] { background: #e74c3c; border-color: #c0392b; color: #fff; }
+    .radio-group.boolean-group label.checked[data-score="1"] { background: #27ae60; border-color: #1e8449; color: #fff; }
 
     .radio-group label.disabled {
       opacity: 0.6;
@@ -456,11 +462,12 @@
             .join("");
 
           const desc = c.description ? `<div class="criterion-desc">${escapeHtml(c.description)}</div>` : "";
+          const groupClass = c.type === "boolean" ? "radio-group boolean-group" : "radio-group";
           return `
           <div class="eval-item" data-criterion="${escapeHtml(c.name)}">
             <div class="criterion-name">${escapeHtml(c.name)}</div>
             ${desc}
-            <div class="radio-group">${radios}</div>
+            <div class="${groupClass}">${radios}</div>
           </div>`;
         })
         .join("");
