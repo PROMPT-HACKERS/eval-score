@@ -338,6 +338,10 @@
       color: #e2e8f0;
     }
 
+    .diff-positive { background: rgba(59,130,246,0.7); color: #fff; }
+    .diff-negative { background: rgba(239,68,68,0.7); color: #fff; }
+    .diff-zero { background: rgba(100,116,139,0.4); color: #cbd5e1; }
+
     /* Responsive */
     @media (max-width: 900px) {
       .chart-grid { grid-template-columns: 1fr; }
@@ -351,7 +355,7 @@
 
 <header>
   <h1>Prompt Evaluation Dashboard</h1>
-  <p>Page 1 - 3 Evaluators / 10 Prompts / 7 Criteria (0-5)</p>
+  <p id="headerDesc">Loading...</p>
 </header>
 
 <div class="dashboard">
@@ -359,24 +363,24 @@
   <!-- Summary Cards -->
   <div class="summary-row" id="summaryCards"></div>
 
-  <!-- Chart Grid -->
+  <!-- Chart Grid: Human Avg vs Mistral -->
   <div class="chart-grid">
     <div class="card">
-      <h2>Radar - Criteria Average by Evaluator</h2>
+      <h2>Radar - Human Avg vs Mistral</h2>
       <div class="chart-container">
         <canvas id="radarChart"></canvas>
       </div>
     </div>
     <div class="card">
-      <h2>Bar - Total Score per Prompt</h2>
+      <h2>Criteria Difference (Mistral - Human Avg)</h2>
       <div class="chart-container">
-        <canvas id="barChart"></canvas>
+        <canvas id="diffChart"></canvas>
       </div>
     </div>
     <div class="card">
-      <h2>Bar - Criteria Average (All Evaluators)</h2>
+      <h2>Total Score per Prompt</h2>
       <div class="chart-container">
-        <canvas id="criteriaBarChart"></canvas>
+        <canvas id="barChart"></canvas>
       </div>
     </div>
     <div class="card">
@@ -387,15 +391,17 @@
     </div>
   </div>
 
-  <!-- Evaluator Agreement -->
+  <!-- Difference Heatmap -->
   <div class="full-width">
     <div class="card">
-      <h2>Evaluator Comparison - Criteria Averages</h2>
-      <div id="compareTable"></div>
+      <h2>Difference Heatmap (Mistral - Human Avg)</h2>
+      <div class="heatmap-wrapper">
+        <table class="heatmap" id="diffHeatmap"></table>
+      </div>
     </div>
   </div>
 
-  <!-- Heatmap -->
+  <!-- Score Heatmap -->
   <div class="full-width">
     <div class="card">
       <h2>Score Heatmap</h2>
@@ -409,20 +415,16 @@
   <!-- Per-Prompt Detail -->
   <div class="full-width">
     <h2 class="section-title">Per-Prompt Detail</h2>
-    <p class="section-desc">Each prompt's 7 criteria scores from all 3 evaluators</p>
-    <div class="view-toggle" id="viewToggle">
-      <button class="active" onclick="switchView('radar')">Radar</button>
-      <button onclick="switchView('bar')">Bar</button>
-    </div>
+    <p class="section-desc">Human Avg vs Mistral for each prompt</p>
     <div class="prompt-grid" id="promptGrid"></div>
   </div>
 
-  <!-- Inter-rater -->
+  <!-- All evaluators radar -->
   <div class="full-width">
     <div class="card">
-      <h2>Inter-Rater Variance per Prompt</h2>
+      <h2>All Evaluators - Criteria Average</h2>
       <div class="chart-container">
-        <canvas id="varianceChart"></canvas>
+        <canvas id="allRadarChart"></canvas>
       </div>
     </div>
   </div>
@@ -434,7 +436,11 @@ const EVALUATOR_COLORS = {
   'Default':  { bg: 'rgba(59,130,246,0.7)',  border: '#3b82f6',  light: 'rgba(59,130,246,0.15)' },
   'Aizawa':   { bg: 'rgba(16,185,129,0.7)',  border: '#10b981',  light: 'rgba(16,185,129,0.15)' },
   'Shimada':  { bg: 'rgba(244,114,182,0.7)', border: '#f472b6',  light: 'rgba(244,114,182,0.15)' },
+  'Mistral':  { bg: 'rgba(251,191,36,0.7)',  border: '#fbbf24',  light: 'rgba(251,191,36,0.15)' },
 };
+
+const HUMAN_COLOR   = { bg: 'rgba(16,185,129,0.7)',  border: '#10b981', light: 'rgba(16,185,129,0.15)' };
+const MISTRAL_COLOR = { bg: 'rgba(251,191,36,0.7)',  border: '#fbbf24', light: 'rgba(251,191,36,0.15)' };
 
 const CRITERIA = [
   'Clarity', 'Role Assignment', 'Prompt Structure Order',
@@ -446,6 +452,7 @@ const CRITERIA_SHORT = [
 ];
 
 let allData = {};
+const HUMAN_EVALUATORS = ['Default', 'Aizawa', 'Shimada'];
 
 // ── Load data ────────────────────────────────────────────
 async function loadData() {
@@ -453,6 +460,7 @@ async function loadData() {
     'Default':  'data/evaluation_results_page1.json',
     'Aizawa':   'data/evaluation_results_page1_aizawa.json',
     'Shimada':  'data/evaluation_results_page1_Shimada.json',
+    'Mistral':  'data/evaluation_results_page1_from_mistral.json',
   };
   for (const [name, path] of Object.entries(files)) {
     const res = await fetch(path);
@@ -461,7 +469,7 @@ async function loadData() {
 }
 
 // ── Helpers ──────────────────────────────────────────────
-function avg(arr) { return arr.reduce((a, b) => a + b, 0) / arr.length; }
+function avg(arr) { return arr.length ? arr.reduce((a, b) => a + b, 0) / arr.length : 0; }
 
 function criteriaAvg(data, criterion) {
   return avg(data.map(d => d.evaluations[criterion]));
@@ -469,6 +477,14 @@ function criteriaAvg(data, criterion) {
 
 function totalScore(entry) {
   return Object.values(entry.evaluations).reduce((a, b) => a + b, 0);
+}
+
+function humanAvgForPrompt(i, criterion) {
+  return avg(HUMAN_EVALUATORS.map(e => allData[e][i].evaluations[criterion]));
+}
+
+function humanAvgTotal(i) {
+  return avg(HUMAN_EVALUATORS.map(e => totalScore(allData[e][i])));
 }
 
 function heatColor(val, max = 5) {
@@ -480,39 +496,55 @@ function heatColor(val, max = 5) {
   return 'rgba(16,185,129,0.85)';
 }
 
+function diffColor(diff) {
+  const abs = Math.abs(diff);
+  const alpha = Math.min(abs / 3, 1) * 0.7 + 0.15;
+  if (diff > 0.05) return `rgba(59,130,246,${alpha})`;
+  if (diff < -0.05) return `rgba(239,68,68,${alpha})`;
+  return 'rgba(100,116,139,0.4)';
+}
+
+// ── Header ──────────────────────────────────────────────
+function renderHeader() {
+  const count = allData[HUMAN_EVALUATORS[0]].length;
+  const evaluators = Object.keys(allData).length;
+  document.getElementById('headerDesc').textContent =
+    `${evaluators} Evaluators (${HUMAN_EVALUATORS.length} Human + Mistral) / ${count} Prompts / ${CRITERIA.length} Criteria`;
+}
+
 // ── Summary Cards ────────────────────────────────────────
 function renderSummary() {
   const container = document.getElementById('summaryCards');
-  const evaluators = Object.keys(allData);
+  const count = allData[HUMAN_EVALUATORS[0]].length;
+  const maxTotal = CRITERIA.length * 5;
 
-  // Overall average
-  const allScores = evaluators.flatMap(e =>
-    allData[e].flatMap(d => Object.values(d.evaluations))
-  );
-  const overallAvg = avg(allScores).toFixed(2);
+  const humanOverall = avg(CRITERIA.map(c => avg(HUMAN_EVALUATORS.map(e => criteriaAvg(allData[e], c)))));
+  const mistralOverall = avg(CRITERIA.map(c => criteriaAvg(allData['Mistral'], c)));
+  const overallDiff = (mistralOverall - humanOverall).toFixed(2);
+  const diffSign = overallDiff > 0 ? '+' : '';
 
-  // Highest / lowest scoring prompt (averaged across evaluators)
-  const promptAvgs = allData[evaluators[0]].map((_, i) => {
-    const scores = evaluators.map(e => totalScore(allData[e][i]));
-    return { id: allData[evaluators[0]][i].id, avg: avg(scores) };
+  // Biggest positive/negative diff by criterion
+  const critDiffs = CRITERIA.map((c, i) => {
+    const hAvg = avg(HUMAN_EVALUATORS.map(e => criteriaAvg(allData[e], c)));
+    const mAvg = criteriaAvg(allData['Mistral'], c);
+    return { name: CRITERIA_SHORT[i], diff: mAvg - hAvg };
   });
-  const best = promptAvgs.reduce((a, b) => a.avg > b.avg ? a : b);
-  const worst = promptAvgs.reduce((a, b) => a.avg < b.avg ? a : b);
+  const maxPosDiff = critDiffs.reduce((a, b) => a.diff > b.diff ? a : b);
+  const maxNegDiff = critDiffs.reduce((a, b) => a.diff < b.diff ? a : b);
 
-  // Weakest criterion
-  const critAvgs = CRITERIA.map(c => ({
-    name: c,
-    avg: avg(evaluators.map(e => criteriaAvg(allData[e], c)))
-  }));
-  const weakest = critAvgs.reduce((a, b) => a.avg < b.avg ? a : b);
-  const strongest = critAvgs.reduce((a, b) => a.avg > b.avg ? a : b);
+  // Correlation: how many prompts Mistral agrees with human avg (within 1 point total)
+  const agreeCount = Array.from({ length: count }, (_, i) => {
+    const hTotal = humanAvgTotal(i);
+    const mTotal = totalScore(allData['Mistral'][i]);
+    return Math.abs(mTotal - hTotal) <= CRITERIA.length ? 1 : 0;
+  }).reduce((a, b) => a + b, 0);
 
   const cards = [
-    { label: 'Overall Avg', value: overallAvg, sub: '/ 5.00' },
-    { label: 'Best Prompt', value: `#${best.id}`, sub: `Avg ${best.avg.toFixed(1)} pts` },
-    { label: 'Weakest Prompt', value: `#${worst.id}`, sub: `Avg ${worst.avg.toFixed(1)} pts` },
-    { label: 'Top Criterion', value: strongest.avg.toFixed(2), sub: strongest.name },
-    { label: 'Weakest Criterion', value: weakest.avg.toFixed(2), sub: weakest.name },
+    { label: 'Human Avg', value: humanOverall.toFixed(2), sub: '/ 5.00' },
+    { label: 'Mistral Avg', value: mistralOverall.toFixed(2), sub: '/ 5.00' },
+    { label: 'Overall Diff', value: `${diffSign}${overallDiff}`, sub: 'Mistral - Human' },
+    { label: 'Most Overrated', value: `+${maxPosDiff.diff.toFixed(2)}`, sub: maxPosDiff.name },
+    { label: 'Most Underrated', value: maxNegDiff.diff.toFixed(2), sub: maxNegDiff.name },
   ];
 
   container.innerHTML = cards.map(c => `
@@ -524,8 +556,414 @@ function renderSummary() {
   `).join('');
 }
 
-// ── Radar Chart ──────────────────────────────────────────
+// ── Radar: Human Avg vs Mistral ─────────────────────────
 function renderRadar() {
+  const humanData = CRITERIA.map(c => avg(HUMAN_EVALUATORS.map(e => criteriaAvg(allData[e], c))));
+  const mistralData = CRITERIA.map(c => criteriaAvg(allData['Mistral'], c));
+
+  new Chart(document.getElementById('radarChart'), {
+    type: 'radar',
+    data: {
+      labels: CRITERIA_SHORT,
+      datasets: [
+        {
+          label: 'Human Avg',
+          data: humanData,
+          backgroundColor: HUMAN_COLOR.light,
+          borderColor: HUMAN_COLOR.border,
+          borderWidth: 2,
+          pointBackgroundColor: HUMAN_COLOR.border,
+          pointRadius: 4,
+        },
+        {
+          label: 'Mistral',
+          data: mistralData,
+          backgroundColor: MISTRAL_COLOR.light,
+          borderColor: MISTRAL_COLOR.border,
+          borderWidth: 2,
+          pointBackgroundColor: MISTRAL_COLOR.border,
+          pointRadius: 4,
+        },
+      ],
+    },
+    options: {
+      scales: {
+        r: {
+          min: 0, max: 5,
+          ticks: { stepSize: 1, color: '#64748b', backdropColor: 'transparent' },
+          grid: { color: '#334155' },
+          pointLabels: { color: '#cbd5e1', font: { size: 12 } },
+          angleLines: { color: '#334155' },
+        }
+      },
+      plugins: {
+        legend: { labels: { color: '#cbd5e1', usePointStyle: true, pointStyle: 'circle' } }
+      },
+      responsive: true,
+      maintainAspectRatio: true,
+    }
+  });
+}
+
+// ── Diff Chart: Mistral - Human Avg per Criterion ───────
+function renderDiffChart() {
+  const diffs = CRITERIA.map(c => {
+    const hAvg = avg(HUMAN_EVALUATORS.map(e => criteriaAvg(allData[e], c)));
+    const mAvg = criteriaAvg(allData['Mistral'], c);
+    return +(mAvg - hAvg).toFixed(2);
+  });
+
+  new Chart(document.getElementById('diffChart'), {
+    type: 'bar',
+    data: {
+      labels: CRITERIA_SHORT,
+      datasets: [{
+        label: 'Mistral - Human Avg',
+        data: diffs,
+        backgroundColor: diffs.map(d => d >= 0 ? 'rgba(59,130,246,0.7)' : 'rgba(239,68,68,0.7)'),
+        borderRadius: 4,
+      }]
+    },
+    options: {
+      indexAxis: 'y',
+      scales: {
+        x: {
+          ticks: { color: '#94a3b8' },
+          grid: { color: '#1e293b' },
+          title: { display: true, text: 'Difference', color: '#94a3b8' },
+        },
+        y: { ticks: { color: '#94a3b8' }, grid: { color: '#1e293b' } }
+      },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            label: (ctx) => {
+              const v = ctx.raw;
+              return v >= 0 ? `Mistral +${v} (higher)` : `Mistral ${v} (lower)`;
+            }
+          }
+        }
+      },
+      responsive: true,
+    }
+  });
+}
+
+// ── Bar Chart: Total Score per Prompt ────────────────────
+function renderBarChart() {
+  const count = allData[HUMAN_EVALUATORS[0]].length;
+  const ids = allData[HUMAN_EVALUATORS[0]].map(d => `#${d.id}`);
+
+  new Chart(document.getElementById('barChart'), {
+    type: 'bar',
+    data: {
+      labels: ids,
+      datasets: [
+        {
+          label: 'Human Avg',
+          data: Array.from({ length: count }, (_, i) => +humanAvgTotal(i).toFixed(1)),
+          backgroundColor: HUMAN_COLOR.bg,
+          borderColor: HUMAN_COLOR.border,
+          borderWidth: 1,
+          borderRadius: 4,
+        },
+        {
+          label: 'Mistral',
+          data: allData['Mistral'].map(d => totalScore(d)),
+          backgroundColor: MISTRAL_COLOR.bg,
+          borderColor: MISTRAL_COLOR.border,
+          borderWidth: 1,
+          borderRadius: 4,
+        },
+      ],
+    },
+    options: {
+      scales: {
+        x: { ticks: { color: '#94a3b8' }, grid: { color: '#1e293b' } },
+        y: { min: 0, max: 35, ticks: { color: '#94a3b8' }, grid: { color: '#1e293b' } }
+      },
+      plugins: {
+        legend: { labels: { color: '#cbd5e1', usePointStyle: true, pointStyle: 'circle' } }
+      },
+      responsive: true,
+    }
+  });
+}
+
+// ── Distribution Chart ──────────────────────────────────
+function renderDistribution() {
+  const humanCounts = [0, 0, 0, 0, 0, 0];
+  const mistralCounts = [0, 0, 0, 0, 0, 0];
+
+  HUMAN_EVALUATORS.forEach(name => {
+    allData[name].forEach(d => {
+      Object.values(d.evaluations).forEach(v => humanCounts[v]++);
+    });
+  });
+  allData['Mistral'].forEach(d => {
+    Object.values(d.evaluations).forEach(v => mistralCounts[v]++);
+  });
+  // Normalize human counts to per-evaluator average
+  const humanNorm = humanCounts.map(c => +(c / HUMAN_EVALUATORS.length).toFixed(1));
+
+  new Chart(document.getElementById('distributionChart'), {
+    type: 'bar',
+    data: {
+      labels: ['0', '1', '2', '3', '4', '5'],
+      datasets: [
+        {
+          label: 'Human Avg',
+          data: humanNorm,
+          backgroundColor: HUMAN_COLOR.bg,
+          borderColor: HUMAN_COLOR.border,
+          borderWidth: 1,
+          borderRadius: 4,
+        },
+        {
+          label: 'Mistral',
+          data: mistralCounts,
+          backgroundColor: MISTRAL_COLOR.bg,
+          borderColor: MISTRAL_COLOR.border,
+          borderWidth: 1,
+          borderRadius: 4,
+        },
+      ],
+    },
+    options: {
+      scales: {
+        x: { title: { display: true, text: 'Score', color: '#94a3b8' }, ticks: { color: '#94a3b8' }, grid: { color: '#1e293b' } },
+        y: { title: { display: true, text: 'Count', color: '#94a3b8' }, ticks: { color: '#94a3b8' }, grid: { color: '#1e293b' } }
+      },
+      plugins: {
+        legend: { labels: { color: '#cbd5e1', usePointStyle: true, pointStyle: 'circle' } }
+      },
+      responsive: true,
+    }
+  });
+}
+
+// ── Diff Heatmap ─────────────────────────────────────────
+function renderDiffHeatmap() {
+  const table = document.getElementById('diffHeatmap');
+  const count = allData[HUMAN_EVALUATORS[0]].length;
+  const ids = allData[HUMAN_EVALUATORS[0]].map(d => d.id);
+
+  let html = '<thead><tr><th class="row-header">Criterion</th>';
+  ids.forEach(id => html += `<th>#${id}</th>`);
+  html += '<th>Avg Diff</th></tr></thead><tbody>';
+
+  CRITERIA.forEach((c, ci) => {
+    html += `<tr><td class="row-label">${CRITERIA_SHORT[ci]}</td>`;
+    const diffs = [];
+    ids.forEach((id, i) => {
+      const hAvg = humanAvgForPrompt(i, c);
+      const mVal = allData['Mistral'][i].evaluations[c];
+      const diff = mVal - hAvg;
+      diffs.push(diff);
+      const sign = diff > 0 ? '+' : '';
+      html += `<td style="background:${diffColor(diff)};color:#fff">${sign}${diff.toFixed(1)}</td>`;
+    });
+    const avgDiff = avg(diffs);
+    const sign = avgDiff > 0 ? '+' : '';
+    html += `<td style="background:${diffColor(avgDiff)};color:#fff"><strong>${sign}${avgDiff.toFixed(2)}</strong></td>`;
+    html += '</tr>';
+  });
+
+  // Total row
+  html += '<tr><td class="row-label"><strong>Total</strong></td>';
+  const totalDiffs = [];
+  ids.forEach((id, i) => {
+    const hTotal = humanAvgTotal(i);
+    const mTotal = totalScore(allData['Mistral'][i]);
+    const diff = mTotal - hTotal;
+    totalDiffs.push(diff);
+    const sign = diff > 0 ? '+' : '';
+    html += `<td style="background:${diffColor(diff / CRITERIA.length)};color:#fff"><strong>${sign}${diff.toFixed(1)}</strong></td>`;
+  });
+  const grandDiff = avg(totalDiffs);
+  const sign = grandDiff > 0 ? '+' : '';
+  html += `<td style="background:${diffColor(grandDiff / CRITERIA.length)};color:#fff"><strong>${sign}${grandDiff.toFixed(1)}</strong></td>`;
+  html += '</tr></tbody>';
+  table.innerHTML = html;
+}
+
+// ── Score Heatmap ────────────────────────────────────────
+let currentHeatmap = 'Human Avg';
+
+function renderHeatmapTabs() {
+  const tabs = document.getElementById('heatmapTabs');
+  const names = ['Human Avg', ...Object.keys(allData)];
+  tabs.innerHTML = names.map(name =>
+    `<button class="${name === currentHeatmap ? 'active' : ''}" onclick="switchHeatmap('${name}')">${name}</button>`
+  ).join('');
+}
+
+function switchHeatmap(name) {
+  currentHeatmap = name;
+  renderHeatmapTabs();
+  renderHeatmap();
+}
+
+function renderHeatmap() {
+  const table = document.getElementById('heatmapTable');
+  const evaluators = Object.keys(allData);
+  const ids = allData[HUMAN_EVALUATORS[0]].map(d => d.id);
+
+  let html = '<thead><tr><th class="row-header">Criterion</th>';
+  ids.forEach(id => html += `<th>#${id}</th>`);
+  html += '<th>Avg</th></tr></thead><tbody>';
+
+  CRITERIA.forEach((c, ci) => {
+    html += `<tr><td class="row-label">${CRITERIA_SHORT[ci]}</td>`;
+    ids.forEach((id, i) => {
+      let val;
+      if (currentHeatmap === 'Human Avg') {
+        val = humanAvgForPrompt(i, c);
+      } else {
+        val = allData[currentHeatmap][i].evaluations[c];
+      }
+      const display = currentHeatmap === 'Human Avg' ? val.toFixed(1) : val;
+      html += `<td style="background:${heatColor(val)};color:#fff">${display}</td>`;
+    });
+    const rowAvg = avg(ids.map((_, i) => {
+      if (currentHeatmap === 'Human Avg') return humanAvgForPrompt(i, c);
+      return allData[currentHeatmap][i].evaluations[c];
+    }));
+    html += `<td style="background:${heatColor(rowAvg)};color:#fff">${rowAvg.toFixed(1)}</td>`;
+    html += '</tr>';
+  });
+
+  html += '<tr><td class="row-label"><strong>Total</strong></td>';
+  ids.forEach((id, i) => {
+    let val;
+    if (currentHeatmap === 'Human Avg') {
+      val = humanAvgTotal(i);
+    } else {
+      val = totalScore(allData[currentHeatmap][i]);
+    }
+    const display = currentHeatmap === 'Human Avg' ? val.toFixed(1) : val;
+    html += `<td style="background:${heatColor(val / CRITERIA.length)};color:#fff"><strong>${display}</strong></td>`;
+  });
+  const grandAvg = avg(ids.map((_, i) => {
+    if (currentHeatmap === 'Human Avg') return humanAvgTotal(i);
+    return totalScore(allData[currentHeatmap][i]);
+  }));
+  html += `<td style="background:${heatColor(grandAvg / CRITERIA.length)};color:#fff"><strong>${grandAvg.toFixed(1)}</strong></td>`;
+  html += '</tr></tbody>';
+  table.innerHTML = html;
+}
+
+// ── Per-Prompt Detail ────────────────────────────────────
+let perPromptCharts = [];
+
+function renderPerPrompt() {
+  const grid = document.getElementById('promptGrid');
+  const count = allData[HUMAN_EVALUATORS[0]].length;
+
+  perPromptCharts.forEach(c => c.destroy());
+  perPromptCharts = [];
+
+  let html = '';
+  for (let i = 0; i < count; i++) {
+    const id = allData[HUMAN_EVALUATORS[0]][i].id;
+    const hTotal = humanAvgTotal(i);
+    const mTotal = totalScore(allData['Mistral'][i]);
+    const diff = mTotal - hTotal;
+    const diffSign = diff > 0 ? '+' : '';
+
+    html += `
+      <div class="prompt-card">
+        <div class="prompt-card-header">
+          <h3>Prompt #${id}</h3>
+          <span class="total-badge" style="color:${diff >= 0 ? '#3b82f6' : '#ef4444'};background:${diff >= 0 ? 'rgba(59,130,246,0.15)' : 'rgba(239,68,68,0.15)'}">
+            Diff ${diffSign}${diff.toFixed(1)}
+          </span>
+        </div>
+        <div class="chart-container">
+          <canvas id="promptChart${i}"></canvas>
+        </div>
+        <table class="score-table">
+          <thead>
+            <tr><th>Criterion</th><th>Human</th><th>Mistral</th><th>Diff</th></tr>
+          </thead>
+          <tbody>
+            ${CRITERIA.map((c, ci) => {
+              const hAvg = humanAvgForPrompt(i, c);
+              const mVal = allData['Mistral'][i].evaluations[c];
+              const d = mVal - hAvg;
+              const ds = d > 0 ? '+' : '';
+              const dc = d > 0.05 ? '#3b82f6' : d < -0.05 ? '#ef4444' : '#94a3b8';
+              return `<tr>
+                <td>${CRITERIA_SHORT[ci]}</td>
+                <td>${hAvg.toFixed(1)}</td>
+                <td>${mVal}</td>
+                <td style="color:${dc};font-weight:600">${ds}${d.toFixed(1)}</td>
+              </tr>`;
+            }).join('')}
+            <tr>
+              <td>Total</td>
+              <td>${hTotal.toFixed(1)}</td>
+              <td>${mTotal}</td>
+              <td style="color:${diff >= 0 ? '#3b82f6' : '#ef4444'};font-weight:600">${diffSign}${diff.toFixed(1)}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>`;
+  }
+  grid.innerHTML = html;
+
+  for (let i = 0; i < count; i++) {
+    const canvas = document.getElementById(`promptChart${i}`);
+    const humanScores = CRITERIA.map(c => humanAvgForPrompt(i, c));
+    const mistralScores = CRITERIA.map(c => allData['Mistral'][i].evaluations[c]);
+
+    const chart = new Chart(canvas, {
+      type: 'radar',
+      data: {
+        labels: CRITERIA_SHORT,
+        datasets: [
+          {
+            label: 'Human Avg',
+            data: humanScores,
+            backgroundColor: HUMAN_COLOR.light,
+            borderColor: HUMAN_COLOR.border,
+            borderWidth: 2,
+            pointBackgroundColor: HUMAN_COLOR.border,
+            pointRadius: 3,
+          },
+          {
+            label: 'Mistral',
+            data: mistralScores,
+            backgroundColor: MISTRAL_COLOR.light,
+            borderColor: MISTRAL_COLOR.border,
+            borderWidth: 2,
+            pointBackgroundColor: MISTRAL_COLOR.border,
+            pointRadius: 3,
+          },
+        ],
+      },
+      options: {
+        scales: {
+          r: {
+            min: 0, max: 5,
+            ticks: { stepSize: 1, color: '#64748b', backdropColor: 'transparent', font: { size: 9 } },
+            grid: { color: '#334155' },
+            pointLabels: { color: '#94a3b8', font: { size: 10 } },
+            angleLines: { color: '#334155' },
+          }
+        },
+        plugins: { legend: { display: false } },
+        responsive: true,
+        maintainAspectRatio: false,
+      }
+    });
+    perPromptCharts.push(chart);
+  }
+}
+
+// ── All Evaluators Radar ────────────────────────────────
+function renderAllRadar() {
   const datasets = Object.entries(allData).map(([name, data]) => ({
     label: name,
     data: CRITERIA.map(c => criteriaAvg(data, c)),
@@ -536,7 +974,7 @@ function renderRadar() {
     pointRadius: 4,
   }));
 
-  new Chart(document.getElementById('radarChart'), {
+  new Chart(document.getElementById('allRadarChart'), {
     type: 'radar',
     data: { labels: CRITERIA_SHORT, datasets },
     options: {
@@ -558,386 +996,19 @@ function renderRadar() {
   });
 }
 
-// ── Bar Chart: Total Score per Prompt ────────────────────
-function renderBarChart() {
-  const evaluators = Object.keys(allData);
-  const ids = allData[evaluators[0]].map(d => `#${d.id}`);
-
-  const datasets = evaluators.map(name => ({
-    label: name,
-    data: allData[name].map(d => totalScore(d)),
-    backgroundColor: EVALUATOR_COLORS[name].bg,
-    borderColor: EVALUATOR_COLORS[name].border,
-    borderWidth: 1,
-    borderRadius: 4,
-  }));
-
-  new Chart(document.getElementById('barChart'), {
-    type: 'bar',
-    data: { labels: ids, datasets },
-    options: {
-      scales: {
-        x: { ticks: { color: '#94a3b8' }, grid: { color: '#1e293b' } },
-        y: { min: 0, max: 35, ticks: { color: '#94a3b8' }, grid: { color: '#1e293b' } }
-      },
-      plugins: {
-        legend: { labels: { color: '#cbd5e1', usePointStyle: true, pointStyle: 'circle' } }
-      },
-      responsive: true,
-    }
-  });
-}
-
-// ── Bar Chart: Criteria Averages ────────────────────────
-function renderCriteriaBar() {
-  const evaluators = Object.keys(allData);
-  const datasets = evaluators.map(name => ({
-    label: name,
-    data: CRITERIA.map(c => criteriaAvg(allData[name], c)),
-    backgroundColor: EVALUATOR_COLORS[name].bg,
-    borderColor: EVALUATOR_COLORS[name].border,
-    borderWidth: 1,
-    borderRadius: 4,
-  }));
-
-  new Chart(document.getElementById('criteriaBarChart'), {
-    type: 'bar',
-    data: { labels: CRITERIA_SHORT, datasets },
-    options: {
-      indexAxis: 'y',
-      scales: {
-        x: { min: 0, max: 5, ticks: { color: '#94a3b8' }, grid: { color: '#1e293b' } },
-        y: { ticks: { color: '#94a3b8' }, grid: { color: '#1e293b' } }
-      },
-      plugins: {
-        legend: { labels: { color: '#cbd5e1', usePointStyle: true, pointStyle: 'circle' } }
-      },
-      responsive: true,
-    }
-  });
-}
-
-// ── Distribution Chart ──────────────────────────────────
-function renderDistribution() {
-  const evaluators = Object.keys(allData);
-  const scoreCounts = {};
-  evaluators.forEach(name => {
-    scoreCounts[name] = [0, 0, 0, 0, 0, 0]; // 0-5
-    allData[name].forEach(d => {
-      Object.values(d.evaluations).forEach(v => scoreCounts[name][v]++);
-    });
-  });
-
-  const datasets = evaluators.map(name => ({
-    label: name,
-    data: scoreCounts[name],
-    backgroundColor: EVALUATOR_COLORS[name].bg,
-    borderColor: EVALUATOR_COLORS[name].border,
-    borderWidth: 1,
-    borderRadius: 4,
-  }));
-
-  new Chart(document.getElementById('distributionChart'), {
-    type: 'bar',
-    data: { labels: ['0', '1', '2', '3', '4', '5'], datasets },
-    options: {
-      scales: {
-        x: { title: { display: true, text: 'Score', color: '#94a3b8' }, ticks: { color: '#94a3b8' }, grid: { color: '#1e293b' } },
-        y: { title: { display: true, text: 'Count', color: '#94a3b8' }, ticks: { color: '#94a3b8', stepSize: 5 }, grid: { color: '#1e293b' } }
-      },
-      plugins: {
-        legend: { labels: { color: '#cbd5e1', usePointStyle: true, pointStyle: 'circle' } }
-      },
-      responsive: true,
-    }
-  });
-}
-
-// ── Comparison Table ────────────────────────────────────
-function renderCompareTable() {
-  const evaluators = Object.keys(allData);
-  const container = document.getElementById('compareTable');
-
-  let html = '<table class="compare-table"><thead><tr><th>Criterion</th>';
-  evaluators.forEach(e => html += `<th>${e}</th>`);
-  html += '<th>Avg</th><th>Spread</th></tr></thead><tbody>';
-
-  CRITERIA.forEach((c, i) => {
-    const vals = evaluators.map(e => criteriaAvg(allData[e], c));
-    const mean = avg(vals);
-    const spread = (Math.max(...vals) - Math.min(...vals)).toFixed(2);
-    html += `<tr><td>${CRITERIA_SHORT[i]}</td>`;
-    vals.forEach((v, j) => {
-      const pct = (v / 5 * 100).toFixed(0);
-      const color = EVALUATOR_COLORS[evaluators[j]].border;
-      html += `<td><div class="bar-cell"><div class="mini-bar" style="width:${pct}px;background:${color}"></div>${v.toFixed(2)}</div></td>`;
-    });
-    html += `<td>${mean.toFixed(2)}</td><td>${spread}</td></tr>`;
-  });
-  html += '</tbody></table>';
-  container.innerHTML = html;
-}
-
-// ── Heatmap ─────────────────────────────────────────────
-let currentHeatmap = 'Default';
-
-function renderHeatmapTabs() {
-  const tabs = document.getElementById('heatmapTabs');
-  tabs.innerHTML = Object.keys(allData).map(name =>
-    `<button class="${name === currentHeatmap ? 'active' : ''}" onclick="switchHeatmap('${name}')">${name}</button>`
-  ).join('') +
-    `<button class="${currentHeatmap === 'Average' ? 'active' : ''}" onclick="switchHeatmap('Average')">Average</button>`;
-}
-
-function switchHeatmap(name) {
-  currentHeatmap = name;
-  renderHeatmapTabs();
-  renderHeatmap();
-}
-
-function renderHeatmap() {
-  const table = document.getElementById('heatmapTable');
-  const evaluators = Object.keys(allData);
-  const ids = allData[evaluators[0]].map(d => d.id);
-
-  let html = '<thead><tr><th class="row-header">Criterion</th>';
-  ids.forEach(id => html += `<th>#${id}</th>`);
-  html += '<th>Avg</th></tr></thead><tbody>';
-
-  CRITERIA.forEach((c, ci) => {
-    html += `<tr><td class="row-label">${CRITERIA_SHORT[ci]}</td>`;
-    ids.forEach((id, i) => {
-      let val;
-      if (currentHeatmap === 'Average') {
-        val = avg(evaluators.map(e => allData[e][i].evaluations[c]));
-      } else {
-        val = allData[currentHeatmap][i].evaluations[c];
-      }
-      const display = currentHeatmap === 'Average' ? val.toFixed(1) : val;
-      html += `<td style="background:${heatColor(val)};color:#fff">${display}</td>`;
-    });
-    // Row average
-    const rowAvg = avg(ids.map((_, i) => {
-      if (currentHeatmap === 'Average') {
-        return avg(evaluators.map(e => allData[e][i].evaluations[c]));
-      }
-      return allData[currentHeatmap][i].evaluations[c];
-    }));
-    html += `<td style="background:${heatColor(rowAvg)};color:#fff">${rowAvg.toFixed(1)}</td>`;
-    html += '</tr>';
-  });
-
-  // Total row
-  html += '<tr><td class="row-label"><strong>Total</strong></td>';
-  ids.forEach((id, i) => {
-    let val;
-    if (currentHeatmap === 'Average') {
-      val = avg(evaluators.map(e => totalScore(allData[e][i])));
-    } else {
-      val = totalScore(allData[currentHeatmap][i]);
-    }
-    const display = currentHeatmap === 'Average' ? val.toFixed(1) : val;
-    html += `<td style="background:${heatColor(val / CRITERIA.length)};color:#fff"><strong>${display}</strong></td>`;
-  });
-  const grandAvg = avg(ids.map((_, i) => {
-    if (currentHeatmap === 'Average') {
-      return avg(evaluators.map(e => totalScore(allData[e][i])));
-    }
-    return totalScore(allData[currentHeatmap][i]);
-  }));
-  html += `<td style="background:${heatColor(grandAvg / CRITERIA.length)};color:#fff"><strong>${grandAvg.toFixed(1)}</strong></td>`;
-  html += '</tr></tbody>';
-  table.innerHTML = html;
-}
-
-// ── Variance Chart ──────────────────────────────────────
-function renderVariance() {
-  const evaluators = Object.keys(allData);
-  const ids = allData[evaluators[0]].map(d => d.id);
-
-  // For each prompt, compute average variance across criteria
-  const variances = ids.map((_, i) => {
-    const criteriaVariances = CRITERIA.map(c => {
-      const scores = evaluators.map(e => allData[e][i].evaluations[c]);
-      const m = avg(scores);
-      return avg(scores.map(s => (s - m) ** 2));
-    });
-    return avg(criteriaVariances);
-  });
-
-  new Chart(document.getElementById('varianceChart'), {
-    type: 'bar',
-    data: {
-      labels: ids.map(id => `#${id}`),
-      datasets: [{
-        label: 'Avg Variance',
-        data: variances.map(v => v.toFixed(3)),
-        backgroundColor: variances.map(v =>
-          v < 0.3 ? 'rgba(16,185,129,0.7)' :
-          v < 0.6 ? 'rgba(234,179,8,0.7)' :
-          'rgba(239,68,68,0.7)'
-        ),
-        borderRadius: 6,
-      }]
-    },
-    options: {
-      scales: {
-        x: { ticks: { color: '#94a3b8' }, grid: { color: '#1e293b' } },
-        y: { min: 0, ticks: { color: '#94a3b8' }, grid: { color: '#1e293b' },
-             title: { display: true, text: 'Variance', color: '#94a3b8' } }
-      },
-      plugins: {
-        legend: { display: false },
-        tooltip: {
-          callbacks: {
-            afterBody: (ctx) => {
-              const i = ctx[0].dataIndex;
-              const lines = CRITERIA.map((c, ci) => {
-                const scores = evaluators.map(e => allData[e][i].evaluations[c]);
-                return `${CRITERIA_SHORT[ci]}: ${scores.join(' / ')}`;
-              });
-              return lines;
-            }
-          }
-        }
-      },
-      responsive: true,
-    }
-  });
-}
-
-// ── Per-Prompt Detail Charts ─────────────────────────────
-let currentView = 'radar';
-let perPromptCharts = [];
-
-function switchView(view) {
-  currentView = view;
-  document.querySelectorAll('#viewToggle button').forEach(btn => {
-    btn.classList.toggle('active', btn.textContent.toLowerCase() === view);
-  });
-  renderPerPrompt();
-}
-
-function renderPerPrompt() {
-  const grid = document.getElementById('promptGrid');
-  const evaluators = Object.keys(allData);
-  const count = allData[evaluators[0]].length;
-
-  // Destroy previous charts
-  perPromptCharts.forEach(c => c.destroy());
-  perPromptCharts = [];
-
-  let html = '';
-  for (let i = 0; i < count; i++) {
-    const id = allData[evaluators[0]][i].id;
-    // Compute avg total for badge color
-    const avgTotal = avg(evaluators.map(e => totalScore(allData[e][i])));
-    const maxTotal = CRITERIA.length * 5;
-    const ratio = avgTotal / maxTotal;
-    const badgeColor = ratio <= 0.4 ? '#ef4444' : ratio <= 0.6 ? '#eab308' : ratio <= 0.8 ? '#22c55e' : '#10b981';
-    const badgeBg = ratio <= 0.4 ? 'rgba(239,68,68,0.15)' : ratio <= 0.6 ? 'rgba(234,179,8,0.15)' : ratio <= 0.8 ? 'rgba(34,197,94,0.15)' : 'rgba(16,185,129,0.15)';
-
-    html += `
-      <div class="prompt-card">
-        <div class="prompt-card-header">
-          <h3>Prompt #${id}</h3>
-          <span class="total-badge" style="color:${badgeColor};background:${badgeBg}">Avg ${avgTotal.toFixed(1)} / ${maxTotal}</span>
-        </div>
-        <div class="chart-container">
-          <canvas id="promptChart${i}"></canvas>
-        </div>
-        <table class="score-table">
-          <thead>
-            <tr>
-              <th>Criterion</th>
-              ${evaluators.map(e => `<th><span class="score-dot" style="background:${EVALUATOR_COLORS[e].border}"></span>${e}</th>`).join('')}
-              <th>Avg</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${CRITERIA.map((c, ci) => {
-              const scores = evaluators.map(e => allData[e][i].evaluations[c]);
-              const mean = avg(scores);
-              return `<tr>
-                <td>${CRITERIA_SHORT[ci]}</td>
-                ${scores.map(s => `<td>${s}</td>`).join('')}
-                <td>${mean.toFixed(1)}</td>
-              </tr>`;
-            }).join('')}
-            <tr>
-              <td>Total</td>
-              ${evaluators.map(e => `<td>${totalScore(allData[e][i])}</td>`).join('')}
-              <td>${avgTotal.toFixed(1)}</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>`;
-  }
-  grid.innerHTML = html;
-
-  // Create charts
-  for (let i = 0; i < count; i++) {
-    const canvas = document.getElementById(`promptChart${i}`);
-    const datasets = evaluators.map(name => {
-      const scores = CRITERIA.map(c => allData[name][i].evaluations[c]);
-      return {
-        label: name,
-        data: scores,
-        backgroundColor: currentView === 'radar' ? EVALUATOR_COLORS[name].light : EVALUATOR_COLORS[name].bg,
-        borderColor: EVALUATOR_COLORS[name].border,
-        borderWidth: currentView === 'radar' ? 2 : 1,
-        pointBackgroundColor: EVALUATOR_COLORS[name].border,
-        pointRadius: 3,
-        borderRadius: currentView === 'bar' ? 4 : 0,
-      };
-    });
-
-    const chart = new Chart(canvas, {
-      type: currentView === 'radar' ? 'radar' : 'bar',
-      data: { labels: CRITERIA_SHORT, datasets },
-      options: currentView === 'radar' ? {
-        scales: {
-          r: {
-            min: 0, max: 5,
-            ticks: { stepSize: 1, color: '#64748b', backdropColor: 'transparent', font: { size: 9 } },
-            grid: { color: '#334155' },
-            pointLabels: { color: '#94a3b8', font: { size: 10 } },
-            angleLines: { color: '#334155' },
-          }
-        },
-        plugins: {
-          legend: { display: false }
-        },
-        responsive: true,
-        maintainAspectRatio: false,
-      } : {
-        scales: {
-          x: { ticks: { color: '#94a3b8', font: { size: 10 } }, grid: { color: '#1e293b' } },
-          y: { min: 0, max: 5, ticks: { stepSize: 1, color: '#94a3b8' }, grid: { color: '#1e293b' } }
-        },
-        plugins: {
-          legend: { display: false }
-        },
-        responsive: true,
-        maintainAspectRatio: false,
-      }
-    });
-    perPromptCharts.push(chart);
-  }
-}
-
 // ── Init ─────────────────────────────────────────────────
 loadData().then(() => {
+  renderHeader();
   renderSummary();
   renderRadar();
+  renderDiffChart();
   renderBarChart();
-  renderCriteriaBar();
   renderDistribution();
-  renderCompareTable();
+  renderDiffHeatmap();
   renderHeatmapTabs();
   renderHeatmap();
   renderPerPrompt();
-  renderVariance();
+  renderAllRadar();
 });
 </script>
 
