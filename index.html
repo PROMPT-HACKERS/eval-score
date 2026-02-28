@@ -34,6 +34,27 @@
       font-weight: 600;
     }
 
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .btn-dashboard {
+      font-size: 13px;
+      font-weight: 600;
+      color: #fff;
+      background: #3498db;
+      padding: 6px 14px;
+      border-radius: 6px;
+      text-decoration: none;
+      transition: background 0.15s;
+    }
+
+    .btn-dashboard:hover {
+      background: #2980b9;
+    }
+
     .progress {
       font-size: 14px;
       background: rgba(255,255,255,0.15);
@@ -434,6 +455,15 @@
         font-size: 16px;
       }
 
+      .header-right {
+        gap: 6px;
+      }
+
+      .btn-dashboard {
+        font-size: 11px;
+        padding: 4px 10px;
+      }
+
       .progress {
         font-size: 11px;
         padding: 4px 10px;
@@ -599,7 +629,10 @@
 <body>
   <header>
     <h1>Prompt Evaluation Tool</h1>
-    <div class="progress" id="progress">Loading...</div>
+    <div class="header-right">
+      <a href="analyze.html" class="btn-dashboard">Dashboard</a>
+      <div class="progress" id="progress">Loading...</div>
+    </div>
   </header>
 
   <nav class="pagination-bar" id="pagination-bar"></nav>
