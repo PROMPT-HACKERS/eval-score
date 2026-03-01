@@ -4,8 +4,7 @@
       "name": "Clarity",
       "description": "明瞭性 - 指示が明確で分かりやすいか",
       "options": [
-        { "value": "1: 
-        ", "note": "非常に曖昧" },
+        { "value": "1: ", "note": "非常に曖昧" },
         { "value": "2: Somewhat Vague", "note": "やや曖昧" },
         { "value": "3: Average", "note": "普通" },
         { "value": "4: Somewhat Clear", "note": "やや明瞭" },
