@@ -646,6 +646,16 @@ function diffColor(diff) {
   return 'rgba(100,116,139,0.4)';
 }
 
+// Radar display boost: minimum 20% shown (matches index.html visualization)
+function toRadarDisplay(score, max = 5) {
+  const pct = Math.max(0, Math.min(score / max, 1));
+  return (0.2 + pct * 0.8) * max;
+}
+
+function fromRadarDisplay(val, max = 5) {
+  return ((val / max) - 0.2) / 0.8 * max;
+}
+
 // ── Header ──────────────────────────────────────────────
 function renderHeader() {
   const count = allData[HUMAN_EVALUATORS[0]].length;
@@ -689,7 +699,7 @@ function renderSummary() {
 
 // ── Radar: Human Avg vs AI ───────────────────────────────
 function renderRadar() {
-  const humanData = CRITERIA.map(c => avg(HUMAN_EVALUATORS.map(e => criteriaAvg(allData[e], c))));
+  const humanData = CRITERIA.map(c => toRadarDisplay(avg(HUMAN_EVALUATORS.map(e => criteriaAvg(allData[e], c)))));
   const datasets = [
     {
       label: 'Human Avg',
@@ -702,7 +712,7 @@ function renderRadar() {
     },
     ...AI_EVALUATORS.map(name => ({
       label: name,
-      data: CRITERIA.map(c => criteriaAvg(allData[name], c)),
+      data: CRITERIA.map(c => toRadarDisplay(criteriaAvg(allData[name], c))),
       backgroundColor: getEvaluatorColor(name).light,
       borderColor: getEvaluatorColor(name).border,
       borderWidth: 2,
@@ -725,7 +735,15 @@ function renderRadar() {
         }
       },
       plugins: {
-        legend: { labels: { color: '#cbd5e1', usePointStyle: true, pointStyle: 'circle' } }
+        legend: { labels: { color: '#cbd5e1', usePointStyle: true, pointStyle: 'circle' } },
+        tooltip: {
+          callbacks: {
+            label: (ctx) => {
+              const actual = fromRadarDisplay(ctx.raw);
+              return `${ctx.dataset.label}: ${actual.toFixed(2)}`;
+            }
+          }
+        }
       },
       responsive: true,
       maintainAspectRatio: true,
@@ -1062,7 +1080,7 @@ function renderPerPrompt() {
         datasets: [
           {
             label: 'Human Avg',
-            data: CRITERIA.map(c => humanAvgForPrompt(id, c)),
+            data: CRITERIA.map(c => toRadarDisplay(humanAvgForPrompt(id, c))),
             backgroundColor: HUMAN_COLOR.light,
             borderColor: HUMAN_COLOR.border,
             borderWidth: 2,
@@ -1071,7 +1089,7 @@ function renderPerPrompt() {
           },
           ...AI_EVALUATORS.map(name => ({
             label: name,
-            data: CRITERIA.map(c => allDataById[name]?.[id]?.evaluations[c] ?? null),
+            data: CRITERIA.map(c => { const v = allDataById[name]?.[id]?.evaluations[c]; return v != null ? toRadarDisplay(v) : null; }),
             backgroundColor: getEvaluatorColor(name).light,
             borderColor: getEvaluatorColor(name).border,
             borderWidth: 2,
@@ -1090,7 +1108,17 @@ function renderPerPrompt() {
             angleLines: { color: '#334155' },
           }
         },
-        plugins: { legend: { display: true, labels: { color: '#94a3b8', font: { size: 9 }, usePointStyle: true } } },
+        plugins: {
+          legend: { display: true, labels: { color: '#94a3b8', font: { size: 9 }, usePointStyle: true } },
+          tooltip: {
+            callbacks: {
+              label: (ctx) => {
+                const actual = fromRadarDisplay(ctx.raw);
+                return `${ctx.dataset.label}: ${actual.toFixed(2)}`;
+              }
+            }
+          }
+        },
         responsive: true,
         maintainAspectRatio: false,
       }
@@ -1103,7 +1131,7 @@ function renderPerPrompt() {
 function renderAllRadar() {
   const datasets = Object.entries(allData).map(([name, data]) => ({
     label: name,
-    data: CRITERIA.map(c => criteriaAvg(data, c)),
+    data: CRITERIA.map(c => toRadarDisplay(criteriaAvg(data, c))),
     backgroundColor: getEvaluatorColor(name).light,
     borderColor: getEvaluatorColor(name).border,
     borderWidth: 2,
@@ -1125,7 +1153,15 @@ function renderAllRadar() {
         }
       },
       plugins: {
-        legend: { labels: { color: '#cbd5e1', usePointStyle: true, pointStyle: 'circle' } }
+        legend: { labels: { color: '#cbd5e1', usePointStyle: true, pointStyle: 'circle' } },
+        tooltip: {
+          callbacks: {
+            label: (ctx) => {
+              const actual = fromRadarDisplay(ctx.raw);
+              return `${ctx.dataset.label}: ${actual.toFixed(2)}`;
+            }
+          }
+        }
       },
       responsive: true,
       maintainAspectRatio: true,
