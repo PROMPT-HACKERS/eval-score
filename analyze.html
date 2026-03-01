@@ -482,6 +482,7 @@ const CRITERIA_SHORT = [
 ];
 
 let allData = {};
+let allDataById = {};
 let promptData = {};
 let HUMAN_EVALUATORS = [];
 let AI_EVALUATORS = [];
@@ -588,6 +589,13 @@ async function loadData() {
   // Populate HUMAN_EVALUATORS dynamically
   HUMAN_EVALUATORS = Object.keys(allData).filter(n => !AI_EVALUATORS.includes(n));
 
+  // Build ID-based lookup map
+  allDataById = {};
+  Object.entries(allData).forEach(([name, entries]) => {
+    allDataById[name] = {};
+    entries.forEach(entry => { allDataById[name][entry.id] = entry; });
+  });
+
   // Fetch prompt text (source of truth for prompt content)
   try {
     const dataRes = await fetch('data.json');
@@ -606,12 +614,19 @@ function totalScore(entry) {
   return Object.values(entry.evaluations).reduce((a, b) => a + b, 0);
 }
 
-function humanAvgForPrompt(i, criterion) {
-  return avg(HUMAN_EVALUATORS.map(e => allData[e][i].evaluations[criterion]));
+function humanAvgForPrompt(id, criterion) {
+  const vals = HUMAN_EVALUATORS
+    .map(e => allDataById[e]?.[id]?.evaluations[criterion])
+    .filter(v => v !== undefined && !isNaN(v));
+  return avg(vals);
 }
 
-function humanAvgTotal(i) {
-  return avg(HUMAN_EVALUATORS.map(e => totalScore(allData[e][i])));
+function humanAvgTotalById(id) {
+  const vals = HUMAN_EVALUATORS
+    .map(e => allDataById[e]?.[id])
+    .filter(Boolean)
+    .map(e => totalScore(e));
+  return avg(vals);
 }
 
 function heatColor(val, max = 5) {
@@ -761,12 +776,11 @@ function renderDiffChart() {
 
 // ── Bar Chart: Total Score per Prompt ────────────────────
 function renderBarChart() {
-  const count = allData[HUMAN_EVALUATORS[0]].length;
-  const ids = allData[HUMAN_EVALUATORS[0]].map(d => `#${d.id}`);
+  const ids = allData[HUMAN_EVALUATORS[0]].map(d => d.id);
   const datasets = [
     {
       label: 'Human Avg',
-      data: Array.from({ length: count }, (_, i) => +humanAvgTotal(i).toFixed(1)),
+      data: ids.map(id => +humanAvgTotalById(id).toFixed(1)),
       backgroundColor: HUMAN_COLOR.bg,
       borderColor: HUMAN_COLOR.border,
       borderWidth: 1,
@@ -774,7 +788,7 @@ function renderBarChart() {
     },
     ...AI_EVALUATORS.map(name => ({
       label: name,
-      data: allData[name].map(d => totalScore(d)),
+      data: ids.map(id => { const e = allDataById[name]?.[id]; return e ? totalScore(e) : null; }),
       backgroundColor: getEvaluatorColor(name).bg,
       borderColor: getEvaluatorColor(name).border,
       borderWidth: 1,
@@ -784,7 +798,7 @@ function renderBarChart() {
 
   new Chart(document.getElementById('barChart'), {
     type: 'bar',
-    data: { labels: ids, datasets },
+    data: { labels: ids.map(id => `#${id}`), datasets },
     options: {
       scales: {
         x: { ticks: { color: '#94a3b8' }, grid: { color: '#1e293b' } },
@@ -862,7 +876,6 @@ function switchDiffHeatmap(name) {
 function renderDiffHeatmap() {
   const table = document.getElementById('diffHeatmap');
   const ids = allData[HUMAN_EVALUATORS[0]].map(d => d.id);
-  const aiData = allData[currentDiffHeatmap];
 
   let html = '<thead><tr><th class="row-header">Criterion</th>';
   ids.forEach(id => html += `<th>#${id}</th>`);
@@ -871,8 +884,10 @@ function renderDiffHeatmap() {
   CRITERIA.forEach((c, ci) => {
     html += `<tr><td class="row-label">${CRITERIA_SHORT[ci]}</td>`;
     const diffs = [];
-    ids.forEach((id, i) => {
-      const diff = aiData[i].evaluations[c] - humanAvgForPrompt(i, c);
+    ids.forEach(id => {
+      const aiEntry = allDataById[currentDiffHeatmap]?.[id];
+      if (!aiEntry) { html += `<td>-</td>`; return; }
+      const diff = aiEntry.evaluations[c] - humanAvgForPrompt(id, c);
       diffs.push(diff);
       const sign = diff > 0 ? '+' : '';
       html += `<td style="background:${diffColor(diff)};color:#fff">${sign}${diff.toFixed(1)}</td>`;
@@ -885,8 +900,10 @@ function renderDiffHeatmap() {
 
   html += '<tr><td class="row-label"><strong>Total</strong></td>';
   const totalDiffs = [];
-  ids.forEach((id, i) => {
-    const diff = totalScore(aiData[i]) - humanAvgTotal(i);
+  ids.forEach(id => {
+    const aiEntry = allDataById[currentDiffHeatmap]?.[id];
+    if (!aiEntry) { html += `<td>-</td>`; return; }
+    const diff = totalScore(aiEntry) - humanAvgTotalById(id);
     totalDiffs.push(diff);
     const sign = diff > 0 ? '+' : '';
     html += `<td style="background:${diffColor(diff / CRITERIA.length)};color:#fff"><strong>${sign}${diff.toFixed(1)}</strong></td>`;
@@ -917,7 +934,6 @@ function switchHeatmap(name) {
 
 function renderHeatmap() {
   const table = document.getElementById('heatmapTable');
-  const evaluators = Object.keys(allData);
   const ids = allData[HUMAN_EVALUATORS[0]].map(d => d.id);
 
   let html = '<thead><tr><th class="row-header">Criterion</th>';
@@ -926,39 +942,45 @@ function renderHeatmap() {
 
   CRITERIA.forEach((c, ci) => {
     html += `<tr><td class="row-label">${CRITERIA_SHORT[ci]}</td>`;
-    ids.forEach((id, i) => {
+    ids.forEach(id => {
       let val;
       if (currentHeatmap === 'Human Avg') {
-        val = humanAvgForPrompt(i, c);
+        val = humanAvgForPrompt(id, c);
       } else {
-        val = allData[currentHeatmap][i].evaluations[c];
+        val = allDataById[currentHeatmap]?.[id]?.evaluations[c] ?? null;
       }
+      if (val === null) { html += `<td>-</td>`; return; }
       const display = currentHeatmap === 'Human Avg' ? val.toFixed(1) : val;
       html += `<td style="background:${heatColor(val)};color:#fff">${display}</td>`;
     });
-    const rowAvg = avg(ids.map((_, i) => {
-      if (currentHeatmap === 'Human Avg') return humanAvgForPrompt(i, c);
-      return allData[currentHeatmap][i].evaluations[c];
-    }));
+    const rowVals = ids.map(id => {
+      if (currentHeatmap === 'Human Avg') return humanAvgForPrompt(id, c);
+      return allDataById[currentHeatmap]?.[id]?.evaluations[c];
+    }).filter(v => v !== undefined && !isNaN(v));
+    const rowAvg = avg(rowVals);
     html += `<td style="background:${heatColor(rowAvg)};color:#fff">${rowAvg.toFixed(1)}</td>`;
     html += '</tr>';
   });
 
   html += '<tr><td class="row-label"><strong>Total</strong></td>';
-  ids.forEach((id, i) => {
+  ids.forEach(id => {
     let val;
     if (currentHeatmap === 'Human Avg') {
-      val = humanAvgTotal(i);
+      val = humanAvgTotalById(id);
     } else {
-      val = totalScore(allData[currentHeatmap][i]);
+      const entry = allDataById[currentHeatmap]?.[id];
+      val = entry ? totalScore(entry) : null;
     }
+    if (val === null) { html += `<td>-</td>`; return; }
     const display = currentHeatmap === 'Human Avg' ? val.toFixed(1) : val;
     html += `<td style="background:${heatColor(val / CRITERIA.length)};color:#fff"><strong>${display}</strong></td>`;
   });
-  const grandAvg = avg(ids.map((_, i) => {
-    if (currentHeatmap === 'Human Avg') return humanAvgTotal(i);
-    return totalScore(allData[currentHeatmap][i]);
-  }));
+  const grandVals = ids.map(id => {
+    if (currentHeatmap === 'Human Avg') return humanAvgTotalById(id);
+    const entry = allDataById[currentHeatmap]?.[id];
+    return entry ? totalScore(entry) : undefined;
+  }).filter(v => v !== undefined && !isNaN(v));
+  const grandAvg = avg(grandVals);
   html += `<td style="background:${heatColor(grandAvg / CRITERIA.length)};color:#fff"><strong>${grandAvg.toFixed(1)}</strong></td>`;
   html += '</tr></tbody>';
   table.innerHTML = html;
@@ -969,20 +991,21 @@ let perPromptCharts = [];
 
 function renderPerPrompt() {
   const grid = document.getElementById('promptGrid');
-  const count = allData[HUMAN_EVALUATORS[0]].length;
+  const ids = allData[HUMAN_EVALUATORS[0]].map(d => d.id);
 
   perPromptCharts.forEach(c => c.destroy());
   perPromptCharts = [];
 
   let html = '';
-  for (let i = 0; i < count; i++) {
-    const id = allData[HUMAN_EVALUATORS[0]][i].id;
-    const hTotal = humanAvgTotal(i);
+  ids.forEach((id, i) => {
+    const hTotal = humanAvgTotalById(id);
     const promptText = promptData[id] || '';
     const escapedPrompt = promptText.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 
     const diffBadges = AI_EVALUATORS.map(aiName => {
-      const mTotal = totalScore(allData[aiName][i]);
+      const aiEntry = allDataById[aiName]?.[id];
+      if (!aiEntry) return '';
+      const mTotal = totalScore(aiEntry);
       const diff = mTotal - hTotal;
       const diffSign = diff >= 0 ? '+' : '';
       const col = getEvaluatorColor(aiName);
@@ -991,9 +1014,11 @@ function renderPerPrompt() {
 
     const thCols = AI_EVALUATORS.map(n => `<th>${n}</th><th>Diff</th>`).join('');
     const bodyRows = CRITERIA.map((c, ci) => {
-      const hAvg = humanAvgForPrompt(i, c);
+      const hAvg = humanAvgForPrompt(id, c);
       const aiCols = AI_EVALUATORS.map(aiName => {
-        const mVal = allData[aiName][i].evaluations[c];
+        const aiEntry = allDataById[aiName]?.[id];
+        if (!aiEntry) return `<td>-</td><td>-</td>`;
+        const mVal = aiEntry.evaluations[c];
         const d = mVal - hAvg;
         const ds = d > 0 ? '+' : '';
         const dc = d > 0.05 ? '#3b82f6' : d < -0.05 ? '#ef4444' : '#94a3b8';
@@ -1002,7 +1027,9 @@ function renderPerPrompt() {
       return `<tr><td>${CRITERIA_SHORT[ci]}</td><td>${hAvg.toFixed(1)}</td>${aiCols}</tr>`;
     }).join('');
     const totalCols = AI_EVALUATORS.map(aiName => {
-      const mTotal = totalScore(allData[aiName][i]);
+      const aiEntry = allDataById[aiName]?.[id];
+      if (!aiEntry) return `<td>-</td><td>-</td>`;
+      const mTotal = totalScore(aiEntry);
       const diff = mTotal - hTotal;
       const diffSign = diff >= 0 ? '+' : '';
       return `<td>${mTotal}</td><td style="color:${diff >= 0 ? '#3b82f6' : '#ef4444'};font-weight:600">${diffSign}${diff.toFixed(1)}</td>`;
@@ -1023,10 +1050,10 @@ function renderPerPrompt() {
           <tbody>${bodyRows}<tr><td>Total</td><td>${hTotal.toFixed(1)}</td>${totalCols}</tr></tbody>
         </table>
       </div>`;
-  }
+  });
   grid.innerHTML = html;
 
-  for (let i = 0; i < count; i++) {
+  ids.forEach((id, i) => {
     const canvas = document.getElementById(`promptChart${i}`);
     const chart = new Chart(canvas, {
       type: 'radar',
@@ -1035,7 +1062,7 @@ function renderPerPrompt() {
         datasets: [
           {
             label: 'Human Avg',
-            data: CRITERIA.map(c => humanAvgForPrompt(i, c)),
+            data: CRITERIA.map(c => humanAvgForPrompt(id, c)),
             backgroundColor: HUMAN_COLOR.light,
             borderColor: HUMAN_COLOR.border,
             borderWidth: 2,
@@ -1044,7 +1071,7 @@ function renderPerPrompt() {
           },
           ...AI_EVALUATORS.map(name => ({
             label: name,
-            data: CRITERIA.map(c => allData[name][i].evaluations[c]),
+            data: CRITERIA.map(c => allDataById[name]?.[id]?.evaluations[c] ?? null),
             backgroundColor: getEvaluatorColor(name).light,
             borderColor: getEvaluatorColor(name).border,
             borderWidth: 2,
@@ -1069,7 +1096,7 @@ function renderPerPrompt() {
       }
     });
     perPromptCharts.push(chart);
-  }
+  });
 }
 
 // ── All Evaluators Radar ────────────────────────────────
